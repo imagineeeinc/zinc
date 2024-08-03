@@ -1,0 +1,129 @@
+/* Fonts */
+.f-l {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 200;
+  font-style: normal;
+}
+.f-reg {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 400;
+  font-style: normal;
+}
+.f-b {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  font-style: normal;
+}
+.f-r-i {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 400;
+  font-style: italic;
+}
+.f-b-i {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  font-style: italic;
+}
+.f-l-i {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 200;
+  font-style: italic;
+}
+
+/* Main */
+:root {
+	font-family: "IBM Plex Mono", monospace;
+	font-weight: 400;
+	font-style: normal;
+}
+body {
+  margin: 0;
+  padding: 0;
+  --color: rgb(0, 0, 0);
+  --color-sec: rgb(80,100,80);
+  --bg: rgb(195, 255, 215);
+  --bg-transperent: rgba(10, 11, 8, 0.4);
+  --secondary: rgb(142, 239, 195);
+  --tertiary: rgb(0, 217, 255);
+  color: var(--color);
+  background: var(--bg);
+  font-size: 20px;
+  overflow: hidden;
+	height: calc(100vh - 2px);
+}
+* {
+  transition-duration: .1s;
+}
+.m-icon {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  user-select: none;
+}
+input, textarea, button, select, a {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+button {
+  --width: 46px;
+  min-height: var(--width);
+  padding: 10px;
+  border: none;
+  background: var(--secondary);
+  border-radius: 10px;
+  cursor: pointer;
+  outline: 3px solid var(--bg);
+  margin: 5px;
+  font: inherit;
+}
+button.m-icon {
+  width: var(--width);
+}
+button:hover, button:focus-visible {
+  outline: 3px solid var(--tertiary);
+}
+button:active {
+  transform: scale(0.95) translateY(5px);
+	filter: opacity(30%);
+  background: var(--tertiary);
+}
+
+.clickable {
+	cursor: pointer;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+}
+.clickable:hover {
+	outline: 3px solid var(--tertiary);
+}
+.clickable:active {
+	transform: scale(0.95) translateY(5px);
+	filter: opacity(30%);
+	background: var(--tertiary);
+}
+input:not([type='checkbox']) {
+  --width: 34px;
+  height: var(--width);
+  border: none;
+  background: var(--secondary);
+  border-radius: 10px;
+  padding: 10px;
+  outline: 5px solid var(--bg);
+  margin: 5px;
+  font: inherit;
+}
+input:not([type='checkbox']):hover, textarea:hover, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--tertiary);
+}
+input[type='checkbox'] {
+  cursor: pointer;
+}
