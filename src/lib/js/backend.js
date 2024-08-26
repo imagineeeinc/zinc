@@ -1,6 +1,7 @@
 import pkg from "peerjs";
 const Peer = pkg;
 import * as dinoDb from "dino-db"
+import { generateSecret } from "./numberGen.js"
 import { navigate } from "svelte-routing";
 
 import { browser } from "$app/environment"
@@ -13,6 +14,21 @@ function createPeer(name, relay, port) {
 	peer.on('connection', function(conn) {
 		// Receive messages
 		conn.on('data', function(data) {
+			if (data.type == "ping" && data.pingType == "online") {
+				// TODO: set online status
+			} else if (data.type == "auth" && data.authType == "first-time") {
+				let base = data.base
+				let prime = data.prime
+				let secret = generateSecret()
+				let pub = (base ** secret) % prime
+				conn.send({type: "auth", authType: "first-time-response", base: base, prime: prime, pub: pub})
+				
+				let uid = data.inviteUid
+				addContactToDb(uid)
+				contactSetSecret(uid, secret)
+				let key = (data.pub ** secret) % prime
+				contactSetKey(uid, key)
+			}
 			console.log('Received', data)
 		});
 	
@@ -44,11 +60,17 @@ if (browser) {
 		let settings = db.getFromBook("self", "settings")
 		createPeer(localStorage.getItem('zinc-self'), settings.relay, settings.port)
 	}
-	window.writeDb = true
+	window.DEBUGnoWriteDb = false
+	window.DEBUGloadFromDb = false
 	setInterval(() => {
-		if (window.writeDb) {
+		if (!window.DEBUGnoWriteDb) {
 			let d = JSON.stringify(db._db)
 			localStorage.setItem('db', d)
+		} else if(window.DEBUGloadFromDb) {
+			let d = localStorage.getItem('db')
+			db._db = JSON.parse(d)
+			window.DEBUGloadFromDb = false
+			window.DEBUGnoWriteDb = false
 		}
 	}, 100)
 }
@@ -69,6 +91,15 @@ export function getPubKey() {
 }
 export async function getContacts() {
 	return db.getFullBook("contacts")
+}
+export async function getContact(id) {
+	return db.getFromBook("contacts", id)
+}
+export async function contactSetSecret(uid, secret) {
+	db.updateInBook("contacts", uid, {secret: secret})
+}
+export async function contactSetKey(uid, key) {
+	db.updateInBook("contacts", uid, {key: key, firstTime: false})
 }
 export function openConnection(uid) {
 	return peer.connect(`zinc-${uid}`)

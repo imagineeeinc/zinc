@@ -1,0 +1,12 @@
+- type: type of packet
+  - "ping"
+  - "auth"
+- pingType: Applies to `type: ping` 
+  - "online": specifies if other user is online
+- authType: Applies to `type: auth`
+  - "first-time": first time connections
+  - "first-time-response": first time connection response back
+- base: Applies to `type: auth, authType: first-time | first-time-response`, base int for e2e
+- prime: Applies to `type: auth, authType: first-time | first-time-response`, large prime for e2e
+- pub: Applies to `type: auth, authType: first-time | first-time-response`, pub key shared for e2e
+- invitedUid: Applies to `type: auth, authType: first-time`, inviter uid for e2e
