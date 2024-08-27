@@ -47,14 +47,15 @@ export function generateLargePrime(bitLength) {
 	do {
 		prime = BigInt(Math.floor(Math.random() * Number(max - min + BigInt(1)))) + min
 	} while (!isProbablyPrime(Number(prime)))
-	return Number(prime)
+	return prime
 }
 
 export function generateRandBase() {
-	const array = new Uint8Array(1)
-	return self.crypto.getRandomValues(array)[0]
+	const array = new Uint16Array(1)
+	return BigInt(self.crypto.getRandomValues(array)[0])
 }
 
 export function generateSecret() {
-	return Math.random() * (64 - 32) + 32
+	const array = new Uint8Array(1)
+	return BigInt(self.crypto.getRandomValues(array)[0])
 }

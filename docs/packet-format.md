@@ -6,7 +6,9 @@
 - authType: Applies to `type: auth`
   - "first-time": first time connections
   - "first-time-response": first time connection response back
+  - "name-exchange": send updated name
 - base: Applies to `type: auth, authType: first-time | first-time-response`, base int for e2e
 - prime: Applies to `type: auth, authType: first-time | first-time-response`, large prime for e2e
 - pub: Applies to `type: auth, authType: first-time | first-time-response`, pub key shared for e2e
-- invitedUid: Applies to `type: auth, authType: first-time`, inviter uid for e2e
+- senderUid: Applies to `type: auth`, senders uid for e2e
+- payload: Applies to most types, signifies encrypted data that has to be decoded according to type of packet and packet subclass
