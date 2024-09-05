@@ -6,12 +6,14 @@
 	import { onMount } from "svelte";
 	import { getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact } from "$lib/js/backend.js";
 	import { generateLargePrime, generateRandBase} from "$lib/js/numberGen.js";
-  import { writable } from "svelte/store";
+  import { writable, get } from "svelte/store";
+	import { DateTime } from "luxon"
 
 	var conn
 	var contact = writable({})
-	function send(text) {
-		conn.send(text)
+	async function send(text) {
+		let encrypted = await encryptForContact(get(contact).uid, text)
+		conn.send({type: "chat", chatType: "text", time: DateTime.now().toUnixInteger(), payload: encrypted.payload, iv: encrypted.iv, senderUid: getPubKey()})
 		document.getElementById("chat-text").value = ""
 	}
 	if (browser) {

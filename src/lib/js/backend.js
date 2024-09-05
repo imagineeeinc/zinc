@@ -1,8 +1,9 @@
 import pkg from "peerjs";
 const Peer = pkg;
 import * as dinoDb from "dino-db"
-import { generateRandBase, generateSecret } from "./numberGen.js"
+import { generateRandBase } from "./numberGen.js"
 import { navigate } from "svelte-routing";
+import { DateTime } from "luxon"
 
 import { browser } from "$app/environment"
 var peer = null
@@ -34,6 +35,16 @@ function createPeer(name, relay, port) {
 			} else if (data.type == "auth" && data.authType == "name-exchange") {
 				let name = await decryptForContact(data.senderUid, data.payload, data.iv)
 				updateContact(data.senderUid, {name})
+			} else if (data.type == "chat") {
+				if (data.chatType == "text") {
+					let message = await decryptForContact(data.senderUid, data.payload, data.iv)
+					let messageItem = {
+						type: "text",
+						data: message,
+						time: data.time
+					}
+					addMessageToDb(data.senderUid, messageItem)
+				}
 			}
 		})
 	
@@ -121,6 +132,17 @@ export async function contactGetKey(uid) {
 export function openConnection(uid) {
 	return peer.connect(`zinc-${uid}`)
 }
+function createMessageStore(uid) {
+	db.setInBook("messages", uid, {messages: []})
+}
+function addMessageToDb(uid, message) {
+	let d = db.getFromBook("messages", uid)
+	if (d == undefined) {
+		createMessageStore(uid)
+	}
+	d.messages.push(message)
+	db.setInBook("messages", uid, {messages: d.messages})
+}
 
 let enc = new TextEncoder()
 let dec = new TextDecoder()
@@ -154,7 +176,6 @@ export async function encryptForContact(uid, payload) {
 		)
 	}
 }
-
 export async function decryptForContact(uid, payload, iv) {
 	let key_encoded = await getContactAesKey(uid)
 	return dec.decode(await window.crypto.subtle.decrypt(
