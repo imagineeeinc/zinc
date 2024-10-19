@@ -1,14 +1,25 @@
 import pkg from "peerjs";
 const Peer = pkg;
 import * as dinoDb from "dino-db"
+import { Dexie, liveQuery } from "dexie"
 import { generateRandBase } from "./numberGen.js"
 import { navigate } from "svelte-routing";
 import { DateTime } from "luxon"
+import { io } from 'socket.io-client'
+
+export var messages = new Dexie("messages")
+messages.version(1).stores({
+  messages: '++id, senderUid, content, timestamp, sendOrRecive'
+})
 
 import { browser } from "$app/environment"
 var peer = null
+export var socket = io()
+if (browser) {
+	socket.emit("registerSelf", {id: getPubKey()})
+}
 function createPeer(name, relay, port) {
-	peer = new Peer(`zinc-${name}`, {
+	/* peer = new Peer(`zinc-${name}`, {
 		host: relay || "0.peerjs.com",
 		port: port || 443
 	})
@@ -37,19 +48,56 @@ function createPeer(name, relay, port) {
 				updateContact(data.senderUid, {name})
 			} else if (data.type == "chat") {
 				if (data.chatType == "text") {
-					let message = await decryptForContact(data.senderUid, data.payload, data.iv)
-					let messageItem = {
-						type: "text",
-						data: message,
-						time: data.time
-					}
-					addMessageToDb(data.senderUid, messageItem)
+					addMessageToDb(data.senderUid, {payload: data.payload, iv: data.iv}, data.time, false)
 				}
 			}
 		})
-	
 		// Send messages
 		
+	})*/
+	socket.on('channelFrom', (data) => {
+		let packet = data.packet
+		if (packet.type == "ping" && packet.pingType == "online") {
+			// TODO: set online status
+		} else if (packet.type == "auth" && packet.authType == "first-time") {
+			let base = BigInt(`0b${packet.base}`)
+			let prime = BigInt(`0b${packet.prime}`)
+			let secret = generateRandBase()
+			let pub = (base ** secret) % prime
+			socket.emit('channelTo', {
+				recipient: packet.senderUid,
+				packet: {
+					type: "auth",
+					authType: "first-time-response",
+					base: base.toString(2),
+					prime: prime.toString(2),
+					pub: pub.toString(2)
+				}
+			})
+			let uid = packet.senderUid
+			addContactToDb(uid)
+			contactSetSecret(uid, secret)
+			let key = (BigInt(`0b${packet.pub}`) ** secret) % prime
+			contactSetKey(uid, key)
+			let nameData = encryptForContact(uid, getSelf().name)
+			socket.emit('channelTo', {
+				recipient: packet.senderUid,
+				packet: {
+					type: "auth",
+					authType: "name-exchange",
+					payload: nameData.payload,
+					iv: nameData.iv,
+					senderUid: uid
+				}
+			})
+		} else if (packet.type == "auth" && packet.authType == "name-exchange") {
+			let name = decryptForContact(packet.senderUid, packet.payload, packet.iv)
+			updateContact(packet.senderUid, {name})
+		} else if (packet.type == "chat") {
+			if (packet.chatType == "text") {
+				addMessageToDb(packet.senderUid, {payload: packet.payload, iv: packet.iv}, packet.time, false)
+			}
+		}
 	})
 }
 var db = new dinoDb.database({id: "zinc"})
@@ -130,18 +178,26 @@ export async function contactGetKey(uid) {
 	return db.getFromBook("contacts", uid).key
 }
 export function openConnection(uid) {
-	return peer.connect(`zinc-${uid}`)
+	//return peer.connect(`zinc-${uid}`)
 }
 function createMessageStore(uid) {
 	db.setInBook("messages", uid, {messages: []})
 }
-function addMessageToDb(uid, message) {
-	let d = db.getFromBook("messages", uid)
-	if (d == undefined) {
-		createMessageStore(uid)
-	}
-	d.messages.push(message)
-	db.setInBook("messages", uid, {messages: d.messages})
+export function addMessageToDb(uid, content, timestamp, sendOrRecive) {
+	// let d = db.getFromBook("messages", uid)
+	// if (d == undefined) {
+	// 	createMessageStore(uid)
+	// }
+	// d.messages.push(message)
+	// db.setInBook("messages", uid, {messages: d.messages})
+	messages.messages.add({senderUid: uid, content, timestamp, sendOrRecive: sendOrRecive})
+}
+export async function getMessages(uid) {
+	let contents = await messages.messages
+	.where("senderUid")
+	.equals(uid)
+	.sortBy('timestamp')
+	return contents
 }
 
 let enc = new TextEncoder()
