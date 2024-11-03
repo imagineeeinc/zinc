@@ -1,29 +1,38 @@
 <script>
 	import RightBox from "./rightBox.svelte";
 	export let uid = ""
-	import { openConnection } from "$lib/js/backend.js";
 	import { browser } from "$app/environment";
 	import { onMount } from "svelte";
-	import { socket, getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact, getMessages, addMessageToDb } from "$lib/js/backend.js";
+	import { socket, getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact, getMessages, addMessageToDb, messages } from "$lib/js/backend.js";
 	import { generateLargePrime, generateRandBase} from "$lib/js/numberGen.js";
   import { writable, get } from "svelte/store";
 	import { DateTime } from "luxon"
 	import { liveQuery } from "dexie"
 
-	var conn
 	var contact = writable({})
 	async function send(text) {
 		let time = DateTime.now().toUnixInteger()
 		let encrypted = await encryptForContact(get(contact).uid, text)
-		conn.send({type: "chat", chatType: "text", time, payload: encrypted.payload, iv: encrypted.iv, senderUid: getPubKey()})
+		// conn.send({type: "chat", chatType: "text", time, payload: encrypted.payload, iv: encrypted.iv, senderUid: getPubKey()})
+		socket.emit("channelTo", {recipient: uid,
+			meshDispese: true,
+			packet: {
+				type: "chat",
+				chatType: "text",
+				time,
+				payload: encrypted.payload,
+				iv: encrypted.iv,
+				senderUid: getPubKey()
+			}
+		})
 		document.getElementById("chat-text").value = ""
 
 		addMessageToDb(uid, {payload: encrypted.payload, iv: encrypted.iv}, time, true )
 	}
-	let message
+	let message = writable()
 	if (browser) {
 		onMount(async () => {
-			message = await getMessages(uid)
+			message.set(await getMessages(uid))
 			contact.set(await getContact(uid))
 			document.getElementById("chat-text").addEventListener("keypress", (e)=>{
 				if (e.code == "Enter") {
@@ -80,21 +89,14 @@
 				// FIXME: key not being set
 				contactSetSecret(uid, secret)
 				contact.set(await getContact(uid))
-				socket.on("channelFrom", async (data) => {
-					if (data.type == "auth" && data.authType == "first-time-response") {
-						let key = (BigInt(`0b${data.pub}`)** BigInt(`0b${contact.secret}`)) % BigInt(`0b${data.prime}`)
-						contactSetKey(uid, key)
-						contact.set(await getContact(uid))
-						let nameData = await encryptForContact(uid, getSelf().name)
-						socket.emit("channelTo", {recipient: uid,
-							packet: {
-								type: "auth",
-								authType: "name-exchange",
-								payload: nameData.payload,
-								iv: nameData.iv,
-								senderUid: getPubKey()
-							}
-						})
+				let nameData = await encryptForContact(uid, getSelf().name)
+				socket.emit("channelTo", {recipient: uid,
+					packet: {
+						type: "auth",
+						authType: "name-exchange",
+						payload: nameData.payload,
+						iv: nameData.iv,
+						senderUid: getPubKey()
 					}
 				})
 			} else {
@@ -115,13 +117,14 @@
 
 <RightBox title={$contact.name}>
 	Hi {$contact.name}
-	{#each message as m}
+	{#each $message as m}
 		<div class="message">
 			{#await decryptForContact(uid, m.content.payload, m.content.iv)}
 				Loading...
 			{:then payload}
 			<!--TODO: FIX TIME-->
-				{payload} {new DateTime({zone: 'local'}).fromSeconds(m.timestamp).toFormat('yyyy-MM-dd t')}
+				{payload}
+				<!-- {payload} {new DateTime({zone: 'local'}).fromSeconds(m.timestamp).toFormat('yyyy-MM-dd t')} -->
 			{/await}
 		</div>
 	{/each}

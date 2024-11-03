@@ -3,7 +3,7 @@ import { sequelize, Users } from './db.init.js'
 await sequelize.destroyAll()
 
 export function createUserLink(id, socketId) {
-	Users.create({ user_id: id, socket_id: socketId })
+	Users.upsert({ user_id: id, socket_id: socketId })
 }
 
 export async function getSocketId(id) {

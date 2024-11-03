@@ -15,9 +15,6 @@ messages.version(1).stores({
 import { browser } from "$app/environment"
 var peer = null
 export var socket = io()
-if (browser) {
-	socket.emit("registerSelf", {id: getPubKey()})
-}
 function createPeer(name, relay, port) {
 	/* peer = new Peer(`zinc-${name}`, {
 		host: relay || "0.peerjs.com",
@@ -55,7 +52,8 @@ function createPeer(name, relay, port) {
 		// Send messages
 		
 	})*/
-	socket.on('channelFrom', (data) => {
+	socket.emit("registerSelf", {id: getPubKey()})
+	socket.on('channelFrom', async (data) => {
 		let packet = data.packet
 		if (packet.type == "ping" && packet.pingType == "online") {
 			// TODO: set online status
@@ -71,13 +69,15 @@ function createPeer(name, relay, port) {
 					authType: "first-time-response",
 					base: base.toString(2),
 					prime: prime.toString(2),
-					pub: pub.toString(2)
+					pub: pub.toString(2),
+					senderUid: getPubKey()
 				}
 			})
 			let uid = packet.senderUid
 			addContactToDb(uid)
 			contactSetSecret(uid, secret)
 			let key = (BigInt(`0b${packet.pub}`) ** secret) % prime
+			console.log(key)
 			contactSetKey(uid, key)
 			let nameData = encryptForContact(uid, getSelf().name)
 			socket.emit('channelTo', {
@@ -87,11 +87,15 @@ function createPeer(name, relay, port) {
 					authType: "name-exchange",
 					payload: nameData.payload,
 					iv: nameData.iv,
-					senderUid: uid
+					senderUid: getPubKey()
 				}
 			})
+			// FIXEME: name exchange not happening first time
+		} else if (packet.type == "auth" && packet.authType == "first-time-response") {
+			let key = (BigInt(`0b${packet.pub}`)** BigInt(`0b${getContact(packet.senderUid).secret}`)) % BigInt(`0b${packet.prime}`)
+			contactSetKey(packet.senderUid, key)
 		} else if (packet.type == "auth" && packet.authType == "name-exchange") {
-			let name = decryptForContact(packet.senderUid, packet.payload, packet.iv)
+			let name = await decryptForContact(packet.senderUid, packet.payload, packet.iv)
 			updateContact(packet.senderUid, {name})
 		} else if (packet.type == "chat") {
 			if (packet.chatType == "text") {
@@ -165,7 +169,7 @@ export function getSelf() {
 export async function getContacts() {
 	return db.getFullBook("contacts")
 }
-export async function getContact(id) {
+export function getContact(id) {
 	return db.getFromBook("contacts", id)
 }
 export async function contactSetSecret(uid, secret) {
@@ -194,9 +198,10 @@ export function addMessageToDb(uid, content, timestamp, sendOrRecive) {
 }
 export async function getMessages(uid) {
 	let contents = await messages.messages
-	.where("senderUid")
-	.equals(uid)
-	.sortBy('timestamp')
+		.where("senderUid")
+		.equals(uid)
+		.sortBy('timestamp')
+
 	return contents
 }
 

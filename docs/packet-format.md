@@ -1,14 +1,21 @@
-- type: type of packet
-  - "ping"
-  - "auth"
-- pingType: Applies to `type: ping` 
-  - "online": specifies if other user is online
-- authType: Applies to `type: auth`
-  - "first-time": first time connections
-  - "first-time-response": first time connection response back
-  - "name-exchange": send updated name
-- base: Applies to `type: auth, authType: first-time | first-time-response`, base int for e2e
-- prime: Applies to `type: auth, authType: first-time | first-time-response`, large prime for e2e
-- pub: Applies to `type: auth, authType: first-time | first-time-response`, pub key shared for e2e
-- senderUid: Applies to `type: auth`, senders uid for e2e
-- payload: Applies to most types, signifies encrypted data that has to be decoded according to type of packet and packet subclass
+- recipient: string = recipient of packet
+- disperseMesh: bool = true if packet should be sent to other peers for storage if offline
+- packet: object = packet data
+  - type: string = type of packet
+    - "ping"
+    - "auth"
+    - "chat"
+  - pingType: string = Applies to `type: ping` 
+    - "online": specifies if other user is online
+  - authType: string = Applies to `type: auth`
+    - "first-time": first time connections
+    - "first-time-response": first time connection response back
+    - "name-exchange": send updated name
+  - base: string = Applies to `type: auth, authType: first-time | first-time-response`, base int for e2e
+  - prime: string = Applies to `type: auth, authType: first-time | first-time-response`, large prime for e2e
+  - pub: string = Applies to `type: auth, authType: first-time | first-time-response`, pub key shared for e2e
+  - senderUid: string = Applies to `type: auth`, senders uid for e2e
+  - chatType: string = Applies to `type: chat`
+    - "text": text message
+  - payload: object | any = Applies to most types, signifies encrypted data that has to be decoded according to type of packet and packet subclass
+  - iv: object = Applies to most types, that send encrypted payload, signifies iv for decryption
