@@ -31,7 +31,7 @@
 		{#if mode == 0}
 			<div class="f-b">Add Contact</div>
 			<form id="add-contact">
-				<input type="text" id="p2p-uid" placeholder="UID">
+				<input type="text" id="p2p-uid" placeholder="ID">
 				<span>
 					<button class="m-icon" on:click={()=>addContact(document.getElementById("p2p-uid").value)}>person_add</button>
 					<button class="m-icon" on:click={()=>navigate("/p2p/scan")}>qr_code</button>
