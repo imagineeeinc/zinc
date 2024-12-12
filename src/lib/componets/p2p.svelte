@@ -11,13 +11,6 @@
 		addContactToDb(uid)
 		navigate("/")
 	}
-	const generateQR = async text => {
-		try {
-			return await QRCode.toDataURL(text, { errorCorrectionLevel: 'H' })
-		} catch (err) {
-			console.error(err)
-		}
-	}
 	if (browser) {
 		onMount(() => {
 			document.getElementById("add-contact").onsubmit = (e)=>{
@@ -39,7 +32,10 @@
 			<div class="f-b">Add Contact</div>
 			<form id="add-contact">
 				<input type="text" id="p2p-uid" placeholder="UID">
-				<button class="m-icon" on:click={()=>addContact(document.getElementById("p2p-uid").value)}>person_add</button>
+				<span>
+					<button class="m-icon" on:click={()=>addContact(document.getElementById("p2p-uid").value)}>person_add</button>
+					<button class="m-icon" on:click={()=>navigate("/p2p/scan")}>qr_code</button>
+				</span>
 			</form>
 		{:else if mode == 1}
 			<div class="f-b">Share Contact</div>
@@ -73,5 +69,12 @@
 		outline: 3px solid var(--tertiary);
 		padding: 10px;
 		border-radius: 10px;
+	}
+	#add-contact {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		justify-content: center;
+		align-items: center;
 	}
 </style>

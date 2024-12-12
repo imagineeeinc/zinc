@@ -96,7 +96,6 @@ button:active {
 	filter: opacity(30%);
   background: var(--tertiary);
 }
-
 .clickable {
 	cursor: pointer;
 	user-select: none;
@@ -126,4 +125,13 @@ input:not([type='checkbox']):hover, textarea:hover, input:focus-visible, textare
 }
 input[type='checkbox'] {
   cursor: pointer;
+}
+hr {
+  width: 50%;
+  height: 9px;
+  background: var(--bg);
+  border: none;
+  outline: 3px solid var(--secondary);
+  border-radius: 10px;
+  margin: 10px auto;
 }

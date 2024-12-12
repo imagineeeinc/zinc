@@ -1,57 +1,20 @@
-import pkg from "peerjs";
-const Peer = pkg;
-import * as dinoDb from "dino-db"
+import * as dinoDb from 'dino-db'
 import { Dexie, liveQuery } from "dexie"
-import { generateRandBase } from "./numberGen.js"
-import { navigate } from "svelte-routing";
-import { DateTime } from "luxon"
+import { generateRandBase, randomIntByLen } from "./numberGen.js"
+import { navigate } from 'svelte-routing'
+import { DateTime } from 'luxon'
+import { generateUsername } from 'friendly-username-generator'
 import { io } from 'socket.io-client'
 
-export var messages = new Dexie("messages")
-messages.version(1).stores({
-  messages: '++id, senderUid, content, timestamp, sendOrRecive'
+export var rdb = new Dexie("ZincDB")
+rdb.version(1).stores({
+  messages: '++id, senderUid, content, timestamp, sendOrRecive',
+	contacts: 'uid, name, firstTime, key, secret'
 })
 
 import { browser } from "$app/environment"
-var peer = null
 export var socket = io()
-function createPeer(name, relay, port) {
-	/* peer = new Peer(`zinc-${name}`, {
-		host: relay || "0.peerjs.com",
-		port: port || 443
-	})
-	peer.on('connection', function(conn) {
-		// Receive messages
-		conn.on('data', async function(data) {
-			console.log('Received', data)
-			if (data.type == "ping" && data.pingType == "online") {
-				// TODO: set online status
-			} else if (data.type == "auth" && data.authType == "first-time") {
-				let base = BigInt(`0b${data.base}`)
-				let prime = BigInt(`0b${data.prime}`)
-				let secret = generateRandBase()
-				let pub = (base ** secret) % prime
-				conn.send({type: "auth", authType: "first-time-response", base: base.toString(2), prime: prime.toString(2), pub: pub.toString(2)})
-				
-				let uid = data.senderUid
-				addContactToDb(uid)
-				contactSetSecret(uid, secret)
-				let key = (BigInt(`0b${data.pub}`) ** secret) % prime
-				contactSetKey(uid, key)
-				let nameData = await encryptForContact(uid, getSelf().name)
-				conn.send({type: "auth", authType: "name-exchange", payload: nameData.payload, iv: nameData.iv, senderUid: uid })
-			} else if (data.type == "auth" && data.authType == "name-exchange") {
-				let name = await decryptForContact(data.senderUid, data.payload, data.iv)
-				updateContact(data.senderUid, {name})
-			} else if (data.type == "chat") {
-				if (data.chatType == "text") {
-					addMessageToDb(data.senderUid, {payload: data.payload, iv: data.iv}, data.time, false)
-				}
-			}
-		})
-		// Send messages
-		
-	})*/
+function createPeer() {
 	socket.emit("registerSelf", {id: getPubKey()})
 	socket.on('channelFrom', async (data) => {
 		let packet = data.packet
@@ -77,11 +40,10 @@ function createPeer(name, relay, port) {
 			addContactToDb(uid)
 			contactSetSecret(uid, secret)
 			let key = (BigInt(`0b${packet.pub}`) ** secret) % prime
-			console.log(key)
-			contactSetKey(uid, key)
-			let nameData = encryptForContact(uid, getSelf().name)
-			socket.emit('channelTo', {
-				recipient: packet.senderUid,
+			await contactSetKey(uid, key)
+			let nameData = await encryptForContact(uid, getSelf().name)
+			socket.emit("channelTo", {
+				recipient: uid,
 				packet: {
 					type: "auth",
 					authType: "name-exchange",
@@ -92,8 +54,20 @@ function createPeer(name, relay, port) {
 			})
 			// FIXEME: name exchange not happening first time
 		} else if (packet.type == "auth" && packet.authType == "first-time-response") {
-			let key = (BigInt(`0b${packet.pub}`)** BigInt(`0b${getContact(packet.senderUid).secret}`)) % BigInt(`0b${packet.prime}`)
-			contactSetKey(packet.senderUid, key)
+			let contact = await getContact(packet.senderUid)
+			let key = (BigInt(`0b${packet.pub}`)** BigInt(`0b${contact.secret}`)) % BigInt(`0b${packet.prime}`)
+			await contactSetKey(packet.senderUid, key)
+			let nameData = await encryptForContact(uid, getSelf().name)
+			socket.emit("channelTo", {
+				recipient: uid,
+				packet: {
+					type: "auth",
+					authType: "name-exchange",
+					payload: nameData.payload,
+					iv: nameData.iv,
+					senderUid: getPubKey()
+				}
+			})
 		} else if (packet.type == "auth" && packet.authType == "name-exchange") {
 			let name = await decryptForContact(packet.senderUid, packet.payload, packet.iv)
 			updateContact(packet.senderUid, {name})
@@ -126,7 +100,7 @@ if (browser) {
 		navigate("/create")
 	} else {
 		let settings = db.getFromBook("self", "settings")
-		createPeer(localStorage.getItem('zinc-self'), settings.relay, settings.port)
+		createPeer()
 	}
 	window.DEBUGnoWriteDb = false
 	window.DEBUGloadFromDb = false
@@ -144,21 +118,25 @@ if (browser) {
 }
 
 export function addContactToDb(contact) {
-	db.setInBook("contacts", contact, {uid: contact, name: contact, firstTime: true})
+	//db.setInBook("contacts", contact, {uid: contact, name: contact, firstTime: true})
+	rdb.contacts.add({uid: contact, name: contact, firstTime: true})
 }
 export function removeContactFromDb(contact) {
-	db.deleteBook("contacts", contact)
+	//db.deleteBook("contacts", contact)
+	rdb.contacts.delete(contact)
 }
 export function updateContact(contact, data) {
-	db.updateInBook("contacts", contact, data)
+	//db.updateInBook("contacts", contact, data)
+	rdb.contacts.update(contact, data)
 }
-export function createAccount(name, relay, port) {
-	let u = self.crypto.randomUUID()
+export function createAccount(name, email) {
+	// let u = self.crypto.randomUUID()
+	// TODO: Email username not generating
+	let u = generateUsername({useRandomNumber: false}) + "-" + randomIntByLen(6)
 	localStorage.setItem('zinc-self', u)
-	db.setInBook("self", "personal", {name: name})
+	db.setInBook("self", "personal", {name: name, email: email})
 	db.setInBook("self", "pub_key", {pub_key: u})
-	db.setInBook("self", "settings", {relay: relay, port: port})
-	createPeer(name, relay, port)
+	createPeer()
 }
 export function getPubKey() {
 	return localStorage.getItem('zinc-self')
@@ -167,41 +145,42 @@ export function getSelf() {
 	return db.getFromBook("self", "personal")
 }
 export async function getContacts() {
-	return db.getFullBook("contacts")
+	//return db.getFullBook("contacts")
+	let res = rdb.contacts.toArray()
+	return res
 }
-export function getContact(id) {
-	return db.getFromBook("contacts", id)
+export async function getContact(id) {
+	//return db.getFromBook("contacts", id)
+	let res = await rdb.contacts.get(id)
+	return res
 }
 export async function contactSetSecret(uid, secret) {
-	db.updateInBook("contacts", uid, {secret: secret.toString(2)})
+	//db.updateInBook("contacts", uid, {secret: secret.toString(2)})
+	rdb.contacts.update(uid, {secret: secret.toString(2)})
 }
 export async function contactSetKey(uid, key) {
-	db.updateInBook("contacts", uid, {key: key.toString(2), firstTime: false})
+	//db.updateInBook("contacts", uid, {key: key.toString(2), firstTime: false})
+	rdb.contacts.update(uid, {key: key.toString(2), firstTime: false})
 }
 export async function contactGetKey(uid) {
-	return db.getFromBook("contacts", uid).key
-}
-export function openConnection(uid) {
-	//return peer.connect(`zinc-${uid}`)
+	//return db.getFromBook("contacts", uid).key
+	let res = await rdb.contacts.get(uid)
+	return res.key
 }
 function createMessageStore(uid) {
 	db.setInBook("messages", uid, {messages: []})
 }
 export function addMessageToDb(uid, content, timestamp, sendOrRecive) {
-	// let d = db.getFromBook("messages", uid)
-	// if (d == undefined) {
-	// 	createMessageStore(uid)
-	// }
-	// d.messages.push(message)
-	// db.setInBook("messages", uid, {messages: d.messages})
-	messages.messages.add({senderUid: uid, content, timestamp, sendOrRecive: sendOrRecive})
+	rdb.messages.add({senderUid: uid, content, timestamp, sendOrRecive: sendOrRecive})
 }
 export async function getMessages(uid) {
-	let contents = await messages.messages
+
+	let contents = liveQuery (
+		() => rdb.messages
 		.where("senderUid")
 		.equals(uid)
 		.sortBy('timestamp')
-
+	)
 	return contents
 }
 

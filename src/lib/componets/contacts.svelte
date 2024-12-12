@@ -1,6 +1,13 @@
 <script>
-	import { navigate } from "svelte-routing";
-	import { getContacts } from "$lib/js/backend.js";
+	import { navigate } from "svelte-routing"
+	import { getContacts, rdb } from "$lib/js/backend.js"
+	import { liveQuery } from "dexie"
+	import { get } from "svelte/store"
+
+	let contacts = liveQuery (
+		() => rdb.contacts
+		.toArray()
+	)
 </script>
 
 <div id="contacts">
@@ -14,13 +21,12 @@
 		</span>
 	</div>
 	<div id="contact-list">
-		{#await getContacts() then contacts}
-			{#each Object.keys(contacts) as uid}
-				<div class="clickable" on:click={() => navigate(`/chat/${uid}`)}>
-					{ contacts[uid].name || uid }
-				</div>
-			{/each}
-		{/await}
+		{#each $contacts as contact}
+			{@const uid = contact.uid}
+			<div class="clickable" on:click={() => navigate(`/chat/${uid}`)}>
+				{ contact.name || uid }
+			</div>
+		{/each}
 	</div>
 </div>
 

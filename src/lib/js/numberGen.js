@@ -59,3 +59,12 @@ export function generateSecret() {
 	const array = new Uint8Array(1)
 	return BigInt(self.crypto.getRandomValues(array)[0])
 }
+
+export function randomIntByLen(size) {
+	const max = (10 ** size) - 1
+  let res = Math.floor(Math.random() * max)
+	while (res.toString().length < size) {
+		res = "0" + res.toString()
+	}
+	return res
+}
