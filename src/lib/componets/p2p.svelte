@@ -11,6 +11,9 @@
 		addContactToDb(uid)
 		navigate("/")
 	}
+	function selectPub(e) {
+		navigator.clipboard.writeText(getPubKey())
+	}
 	if (browser) {
 		onMount(() => {
 			document.getElementById("add-contact").onsubmit = (e)=>{
@@ -41,7 +44,7 @@
 			<div class="f-b">Share Contact</div>
 			<QR data={getPubKey()} errorCorrectionLevel="H" width="40vh" />
 			<div>Scan this QR Code, or share the code bellow</div>
-			<div class="f-b" id="pub-key">{getPubKey()}</div>
+			<div class="f-b" id="pub-key" on:click={selectPub}>{getPubKey()}</div>
 		{/if}
 	</div>
 </RightBox>
@@ -63,7 +66,6 @@
 		background: var(--secondary);
 		border-radius: 10px;
 		padding: 10px;
-		height: 100%;
 	}
 	#pub-key {
 		outline: 3px solid var(--tertiary);

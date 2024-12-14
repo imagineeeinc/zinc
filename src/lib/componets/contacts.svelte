@@ -1,29 +1,39 @@
 <script>
 	import { navigate } from "svelte-routing"
-	import { getContacts, rdb } from "$lib/js/backend.js"
+	import { getContacts, deleteContact, rdb } from "$lib/js/backend.js"
 	import { liveQuery } from "dexie"
 	import { get } from "svelte/store"
-
+	let deleteMode = false
 	let contacts = liveQuery (
 		() => rdb.contacts
 		.toArray()
 	)
+	function clickHandler(uid) {
+		if (deleteMode) {
+			if (confirm("Are you sure you want to delete this contact?")) {
+				deleteContact(uid)
+			}
+		} else {
+			navigate(`/chat/${uid}`)
+		}
+	}
+	
 </script>
 
 <div id="contacts">
 	<div id="contact-manage">
 		<span>
-			<button class="m-icon" title="Add or Share Contact" on:click={() => navigate("/p2p")}>p2p</button>
+			<button class="m-icon" title="Add or Share Contact" on:click={() => navigate("/p2p")}>person_add</button>
 			<button class="m-icon" title="Search Contact">person_search</button>
 			<button class="m-icon" title="Search Everything">search</button>
-			<button class="m-icon" title="Delete Contact">delete</button>
+			<button class="m-icon" title="Delete Contact" on:click={() => deleteMode = !deleteMode}>delete</button>
 			<button class="m-icon" title="Settings">settings</button>
 		</span>
 	</div>
 	<div id="contact-list">
 		{#each $contacts as contact}
 			{@const uid = contact.uid}
-			<div class="clickable" on:click={() => navigate(`/chat/${uid}`)}>
+			<div class="clickable {deleteMode ? "delete" : ""}" on:click={() => clickHandler(uid)}>
 				{ contact.name || uid }
 			</div>
 		{/each}
@@ -61,6 +71,9 @@
 		outline: 3px solid var(--bg);
 		padding: 10px;
 		border-radius: 10px;
+	}
+	.delete {
+		color: crimson
 	}
 	#contacts > div > div:hover {
 		outline: 3px solid var(--tertiary);

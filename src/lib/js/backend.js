@@ -13,9 +13,12 @@ rdb.version(1).stores({
 })
 
 import { browser } from "$app/environment"
+import { on } from 'svelte/events'
 export var socket = io()
+export var onNetwork = false
 function createPeer() {
 	socket.emit("registerSelf", {id: getPubKey()})
+	onNetwork = true
 	socket.on('channelFrom', async (data) => {
 		let packet = data.packet
 		if (packet.type == "ping" && packet.pingType == "online") {
@@ -118,20 +121,18 @@ if (browser) {
 }
 
 export function addContactToDb(contact) {
-	//db.setInBook("contacts", contact, {uid: contact, name: contact, firstTime: true})
 	rdb.contacts.add({uid: contact, name: contact, firstTime: true})
 }
+export function deleteContact(contact) {
+	rdb.contacts.delete(contact)
+}
 export function removeContactFromDb(contact) {
-	//db.deleteBook("contacts", contact)
 	rdb.contacts.delete(contact)
 }
 export function updateContact(contact, data) {
-	//db.updateInBook("contacts", contact, data)
 	rdb.contacts.update(contact, data)
 }
 export function createAccount(name, email) {
-	// let u = self.crypto.randomUUID()
-	// TODO: Email username not generating
 	let u = generateUsername({useRandomNumber: false}) + "-" + randomIntByLen(6)
 	localStorage.setItem('zinc-self', u)
 	db.setInBook("self", "personal", {name: name, email: email})

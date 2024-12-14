@@ -6,8 +6,10 @@
 	import { socket, getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact, getMessages, addMessageToDb, rdb } from "$lib/js/backend.js";
 	import { generateLargePrime, generateRandBase} from "$lib/js/numberGen.js";
   import { writable, get } from "svelte/store";
+	import { tick } from 'svelte';
 	import { DateTime } from "luxon"
 	import { liveQuery } from "dexie"
+	import { scrollToBottom } from "$lib/js/scroll.js";
 
 	var contact = writable({})
 	async function send(text) {
@@ -35,10 +37,24 @@
 		.where("senderUid")
 		.equals(uid)
 		.sortBy('timestamp')
-	)//getMessages()//writable()
+	)
+	let messagesDecrypted = writable([])
+	let yScroll = writable(0)
 	if (browser) {
 		onMount(async () => {
-			//message.set(await getMessages(uid))
+			message.subscribe(async (value) => {
+				let temp = []
+				for (let i = 0; i < value.length; i++) {
+					let m = value[i]
+					let res = await decryptForContact(uid, m.content.payload, m.content.iv)
+					m.payload = res
+					temp.push(m)
+				}
+				$messagesDecrypted = temp
+				tick().then(() => {
+					scrollToBottom(document.getElementById("message-box"))
+				})
+			})
 			contact.set(await getContact(uid))
 			document.getElementById("chat-text").addEventListener("keypress", (e)=>{
 				if (e.code == "Enter") {
@@ -80,17 +96,16 @@
 </script>
 
 <RightBox title={$contact.name}>
-	{#each $message as m}
-		<div class="message">
-			{#await decryptForContact(uid, m.content.payload, m.content.iv)}
-				Loading...
-			{:then payload}
-			<!--TODO: FIX TIME-->
-				{payload}
-				<!-- {payload} {new DateTime({zone: 'local'}).fromSeconds(m.timestamp).toFormat('yyyy-MM-dd t')} -->
-			{/await}
+	<div id="message-box" on:scroll={(e) => $yScroll = e.target.scrollTop}>
+		<div id="message-content">
+			{#each $messagesDecrypted as m}
+				<div class="message {m.sendOrRecive? 'sent': 'recieved'}">
+					{m.payload}
+					<span class="message-time">{DateTime.fromSeconds(m.timestamp).toFormat('dd/MM/yy t')}</span>
+				</div>
+			{/each}
 		</div>
-	{/each}
+	</div>
 	<div id="chat-form">
 		<input type="text" id="chat-text" placeholder="Type a message">
 		<button class="m-icon" on:click={()=>send(document.getElementById("chat-text").value)}>send</button>
@@ -116,7 +131,39 @@
 			bottom: 20px;
 		}
 	}
+	#message-box {
+		padding: 0;
+		width: 100%;
+		height: calc(100% - 60px);
+		overflow-y: auto;
+	}
+	#message-content {
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+		gap: 10px;
+		width: 100%;
+	}
 	#chat-text {
 		width: 100%;
+	}
+	.message {
+		display: inline-block;
+		background: var(--secondary);
+		padding: 10px;
+		border-radius: 10px;
+		max-width: 60%;
+	}
+	.message-time {
+		font-size: x-small;
+		display: block;
+	}
+	.recieved {
+		text-align: left;
+		align-self: flex-start;
+	}
+	.sent {
+		text-align: right;
+		align-self: flex-end;
 	}
 </style>

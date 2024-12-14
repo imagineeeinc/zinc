@@ -46,5 +46,6 @@
 	}
 	#right-box-content {
 		padding: 10px;
+		height: calc(100% - 85px);
 	}
 </style>

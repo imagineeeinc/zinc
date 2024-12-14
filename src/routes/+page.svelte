@@ -4,7 +4,7 @@
 	import P2p from '$lib/componets/p2p.svelte';
 	import Create from '../lib/componets/create.svelte';
 	import ScanQr from '../lib/componets/scanQr.svelte';
-	import { socket } from '$lib/js/backend.js';
+	import { onNetwork } from '$lib/js/backend.js';
 	import { page } from '$app/stores'
 
 	import { Router, Route, navigate } from 'svelte-routing'
@@ -13,7 +13,7 @@
 	onMount(() => {
 		if ($page.url.hash) {
 			let interval = setInterval(() => {
-				if (socket.connected) {
+				if (onNetwork) {
 					navigate($page.url.hash.slice(2))
 					clearInterval(interval)
 				}
