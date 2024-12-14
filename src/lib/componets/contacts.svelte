@@ -26,7 +26,7 @@
 			<button class="m-icon" title="Add or Share Contact" on:click={() => navigate("/p2p")}>person_add</button>
 			<button class="m-icon" title="Search Contact">person_search</button>
 			<button class="m-icon" title="Search Everything">search</button>
-			<button class="m-icon" title="Delete Contact" on:click={() => deleteMode = !deleteMode}>delete</button>
+			<button class="m-icon {deleteMode ? "delete" : ""}" title="Delete Contact" on:click={() => deleteMode = !deleteMode}>delete</button>
 			<button class="m-icon" title="Settings">settings</button>
 		</span>
 	</div>
@@ -67,16 +67,17 @@
 		overflow-y: auto;
 		height: 100%;
 	}
-	#contacts > div > div {
+	#contact-list > div {
 		outline: 3px solid var(--bg);
 		padding: 10px;
 		border-radius: 10px;
 	}
-	.delete {
-		color: crimson
-	}
-	#contacts > div > div:hover {
+	#contact-list > div:hover {
 		outline: 3px solid var(--tertiary);
+	}
+	.delete {
+		color: crimson;
+		outline: 3px solid crimson;
 	}
 	@media (max-width: 100vh) {
 		#contacts {
