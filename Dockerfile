@@ -6,7 +6,6 @@ COPY . .
 
 RUN npm install
 
-RUN node scripts/init.db.js
 RUN npm run build
 RUN npm prune --production
 
