@@ -7,7 +7,7 @@ export function socketManger(io) {
 		socket.on('channelTo', async (data) => {
 			let socketId = await getSocketId(data.recipient)
 			if (!socketId) return
-			socket.in(socketId.socket_id).emit('channelFrom', data)
+			socket.in(socketId).emit('channelFrom', data)
 		})
 		socket.on('disconnect', () => {
 			removeLink(socket.id)

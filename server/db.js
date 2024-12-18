@@ -1,15 +1,16 @@
-import { sequelize, Users } from './db.init.js'
+import { openKv } from "@deno/kv"
 
-await sequelize.destroyAll()
+const kv = await openKv("")
 
-export function createUserLink(id, socketId) {
-	Users.upsert({ user_id: id, socket_id: socketId })
+export async function createUserLink(id, socketId) {
+	await kv.set([id], socketId)
 }
 
 export async function getSocketId(id) {
-	return await Users.findOne({ where: { user_id: id } })
+	let res = await kv.get([id])
+	return res.value
 }
 
-export function removeLink(id) {
-	Users.destroy({ where: { socket_id: id } })
+export async function removeLink(id) {
+	await kv.delete([id])
 }
