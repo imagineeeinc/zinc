@@ -79,7 +79,7 @@
 		color: crimson;
 		outline: 3px solid crimson;
 	}
-	@media (max-width: 100vh) {
+	@media (max-width: 900px) {
 		#contacts {
 			width: calc(100vw - 20px);
 		}

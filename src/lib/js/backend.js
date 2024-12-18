@@ -55,7 +55,7 @@ function createPeer() {
 					senderUid: getPubKey()
 				}
 			})
-			// FIXEME: name exchange not happening first time
+			// FIXME: name exchange not happening first time
 		} else if (packet.type == "auth" && packet.authType == "first-time-response") {
 			let contact = await getContact(packet.senderUid)
 			let key = (BigInt(`0b${packet.pub}`)** BigInt(`0b${contact.secret}`)) % BigInt(`0b${packet.prime}`)

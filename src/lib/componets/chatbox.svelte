@@ -124,7 +124,7 @@
 		left: calc(30vw + 30px);
 		width: calc(70vw - 50px);
 	}
-	@media (max-width: 100vh) {
+	@media (max-width: 900px) {
 		#chat-form {
 			left: 20px;
 			width: calc(100vw - 40px);

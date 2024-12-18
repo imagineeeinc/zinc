@@ -28,7 +28,7 @@
 		background: var(--bg);
 		outline: 5px solid var(--secondary);
 	}
-	@media (max-width: 100vh) {
+	@media (max-width: 900px) {
 		#right-box {
 			left: 15px;
 			width: calc(100vw - 30px);
