@@ -32,6 +32,10 @@
 
 		addMessageToDb(uid, {payload: encrypted.payload, iv: encrypted.iv}, time, true )
 	}
+	function sendButton(e) {
+		e.preventDefault()
+		send(document.getElementById("chat-text").value)
+	}
 	let message = liveQuery (
 		() => rdb.messages
 		.where("senderUid")
@@ -57,7 +61,7 @@
 			})
 			contact.set(await getContact(uid))
 			document.getElementById("chat-text").addEventListener("keypress", (e)=>{
-				if (e.code == "Enter") {
+				if (e.code == "Enter") {// e.keyCode == 13
 					send(document.getElementById("chat-text").value)
 				}
 			})
@@ -91,6 +95,7 @@
 					}
 				})
 			}
+			document.getElementById("chat-text").focus()
 		})
 	}
 </script>
@@ -107,8 +112,8 @@
 		</div>
 	</div>
 	<div id="chat-form">
-		<input type="text" id="chat-text" placeholder="Type a message">
-		<button class="m-icon" on:click={()=>send(document.getElementById("chat-text").value)}>send</button>
+		<input type="text" id="chat-text" placeholder="Type a message" inputmode="text">
+		<button class="m-icon" id="chat-send" on:click={sendButton}>send</button>
 	</div>
 </RightBox>
 
@@ -116,19 +121,22 @@
 	#chat-form {
 		display: flex;
 		flex-direction: row;
-		gap: 10px;
+		gap: 2.5px;
 		justify-content: center;
 
 		position: fixed;
-		bottom: 20px;
-		left: calc(30vw + 30px);
-		width: calc(70vw - 50px);
+		bottom: 15px;
+		left: calc(30vw + 35px);
+		width: calc(70vw - 55px);
+	}
+	#chat-send {
+		width: 64px;
 	}
 	@media (max-width: 900px) {
 		#chat-form {
-			left: 20px;
-			width: calc(100vw - 40px);
-			bottom: 20px;
+			left: 15px;
+			width: calc(100vw - 30px);
+			bottom: 15px;
 		}
 	}
 	#message-box {

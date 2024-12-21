@@ -19,18 +19,18 @@
 <style>
 	#right-box {
 		position: fixed;
-		top: 15px;
-		left: calc(30vw + 25px);
+		top: 20px;
+		left: calc(30vw + 30px);
 		
-		width: calc(70vw - 40px);
-		height: calc(100% - 30px);
+		width: calc(70vw - 55px);
+		height: calc(100% - 40px);
 		border-radius: 10px;
 		background: var(--bg);
-		outline: 5px solid var(--secondary);
+		border: 5px solid var(--secondary);
 	}
 	@media (max-width: 900px) {
 		#right-box {
-			left: 15px;
+			left: 10px;
 			width: calc(100vw - 30px);
 		}
 	}

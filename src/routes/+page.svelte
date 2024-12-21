@@ -4,6 +4,7 @@
 	import P2p from '$lib/componets/p2p.svelte';
 	import Create from '../lib/componets/create.svelte';
 	import ScanQr from '../lib/componets/scanQr.svelte';
+	import StatusBar from '../lib/componets/statusBar.svelte';
 	import { onNetwork } from '$lib/js/backend.js';
 	import { page } from '$app/stores'
 
@@ -21,6 +22,8 @@
 		}
 	})
 </script>
+
+<StatusBar />
 
 <Contacts />
 

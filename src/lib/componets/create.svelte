@@ -15,7 +15,7 @@
 		<img src="/zinc.svg" id="logo" alt="Zinc Logo">
 		<h3>Create a new Zinc P2P Account</h3>
 		<input type="text" placeholder="Name" id="new-name">
-		<input type="email" placeholder="Email" id="email">
+		<input type="email" placeholder="Email" id="email" inputmode="email">
 		<!-- <input type="url" placeholder="Relay Server Host" id="new-relay">
 		<input type="number" placeholder="Relay Server Port" id="new-port"> -->
 		<button class="m-icon" on:click={createSelf}>login</button>

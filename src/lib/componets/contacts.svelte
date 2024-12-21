@@ -47,8 +47,12 @@
 		gap: 10px;
 
 		width: 30vw;
-		height: calc(100% - 20px);
-		padding: 10px;
+		height: calc(100% - 30px);
+		padding: 20px 10px 10px 10px;
+
+		position: fixed;
+		top: 0;
+		left: 0;
 	}
 	#contact-manage {
 		background: var(--secondary);
