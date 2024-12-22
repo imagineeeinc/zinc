@@ -1,6 +1,6 @@
 <script>
 	import RightBox from "./rightBox.svelte";
-	export let uid = ""
+	let { uid } = $props()
 	import { browser } from "$app/environment";
 	import { onMount } from "svelte";
 	import { socket, getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact, getMessages, addMessageToDb, rdb } from "$lib/js/backend.js";

@@ -7,6 +7,7 @@
 		createAccount(document.getElementById("new-name").value,
 		document.getElementById("email").value)
 		navigate("/")
+		window.location.reload()
 	}
 </script>
 

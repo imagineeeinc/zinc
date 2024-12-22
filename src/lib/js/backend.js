@@ -5,6 +5,7 @@ import { navigate } from 'svelte-routing'
 import { DateTime } from 'luxon'
 import { generateUsername } from 'friendly-username-generator'
 import { io } from 'socket.io-client'
+import { toast } from '@zerodevx/svelte-toast'
 
 export var rdb = new Dexie("ZincDB")
 rdb.version(1).stores({
@@ -14,8 +15,12 @@ rdb.version(1).stores({
 
 import { browser } from "$app/environment"
 import { on } from 'svelte/events'
+import { writable } from 'svelte/store'
+
 export var socket = io()
 export var onNetwork = false
+export let myName = writable("")
+let visible = writable(true)
 function createPeer() {
 	socket.emit("registerSelf", {id: getPubKey()})
 	onNetwork = true
@@ -77,6 +82,11 @@ function createPeer() {
 		} else if (packet.type == "chat") {
 			if (packet.chatType == "text") {
 				addMessageToDb(packet.senderUid, {payload: packet.payload, iv: packet.iv}, packet.time, false)
+				if (!document.hasFocus() || visible.get() == false) {
+					await notifyMessage(packet.senderUid, packet)
+				} else if (window.location.href.split("/").pop() != packet.senderUid) {
+					await toastMessage(packet.senderUid, packet)
+				}
 			}
 		}
 	})
@@ -84,6 +94,14 @@ function createPeer() {
 var db = new dinoDb.database({id: "zinc"})
 
 if (browser) {
+	document.addEventListener('visibilitychange', function() {
+		if (document.visibilityState === 'visible') {
+			visible.set(true)
+		} else {
+			visible.set(false)
+		}
+	})
+
 	if (localStorage.getItem('db') === undefined ||
   localStorage.getItem('db') === "" ||
   localStorage.getItem('db') === null) {
@@ -96,7 +114,12 @@ if (browser) {
 	} else {
 		let d = localStorage.getItem('db')
 		db._db = JSON.parse(d)
+		myName.set(getSelf().name)
+		myName.subscribe((value) => {
+		db.updateInBook("self", "personal", {name: value})
+	})
 	}
+
 	if (localStorage.getItem('zinc-self') === undefined ||
 	localStorage.getItem('zinc-self') === "" ||
 	localStorage.getItem('zinc-self') === null) {
@@ -227,6 +250,26 @@ export async function decryptForContact(uid, payload, iv) {
 		key_encoded,
 		payload
 	))
+}
+
+async function notifyMessage(uid, content) {
+	if (!("Notification" in window)) {
+		return
+	}
+	if (Notification.permission === "granted") {
+		let res = await decryptForContact(uid, content.payload, content.iv)
+		let contact = await getContact(uid)
+		let noti = new Notification(`From ${contact.name}`, {body: res, timestamp: content.timestamp})
+		noti.onclick = () => {
+			navigate("/")
+			navigate("/chat/" + uid)
+		}
+	}
+}
+async function toastMessage(uid, content) {
+	let res = await decryptForContact(uid, content.payload, content.iv)
+	let contact = await getContact(uid)
+	toast.push(`<strong>${contact.name}</strong>: ${res}`, { classes: ['toast'],  pausable: true, duration: 20000 })
 }
 
 export { db }

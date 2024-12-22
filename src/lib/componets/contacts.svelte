@@ -14,6 +14,7 @@
 				deleteContact(uid)
 			}
 		} else {
+			navigate("/")
 			navigate(`/chat/${uid}`)
 		}
 	}
@@ -27,7 +28,8 @@
 			<button class="m-icon" title="Search Contact">person_search</button>
 			<button class="m-icon" title="Search Everything">search</button>
 			<button class="m-icon {deleteMode ? "delete" : ""}" title="Delete Contact" on:click={() => deleteMode = !deleteMode}>delete</button>
-			<button class="m-icon" title="Settings">settings</button>
+			<button class="m-icon" title="Settings" on:click={() => navigate("/settings")}>settings</button>
+			<button class="m-icon" title="Notifications">notifications</button>
 		</span>
 	</div>
 	<div id="contact-list">
@@ -81,7 +83,22 @@
 	}
 	.delete {
 		color: crimson;
-		outline: 3px solid crimson;
+		outline: 3px solid crimson !important;
+		animation: jigle .3s ease infinite;
+	}
+	.delete:hover {
+		outline: 3px solid lightcoral !important;
+	}
+	@keyframes jigle {
+		0% {
+			transform: rotate(-.5deg);
+		}
+		50% {
+			transform: rotate(.5deg);
+		}
+		100% {
+			transform: rotate(-.5deg);
+		}
 	}
 	@media (max-width: 900px) {
 		#contacts {
