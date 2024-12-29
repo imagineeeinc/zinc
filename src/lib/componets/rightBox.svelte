@@ -19,7 +19,7 @@
 <style>
 	#right-box {
 		position: fixed;
-		top: 20px;
+		top: env(titlebar-area-height, 20px);
 		left: calc(30vw + 30px);
 		
 		width: calc(70vw - 55px);

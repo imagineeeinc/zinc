@@ -30,7 +30,7 @@
 		document.getElementById("chat-text").value = ""
 		document.getElementById("chat-text").focus()
 
-		addMessageToDb(uid, {payload: encrypted.payload, iv: encrypted.iv}, time, true )
+		await addMessageToDb(uid, {payload: encrypted.payload, iv: encrypted.iv}, time, true )
 	}
 	function sendButton(e) {
 		e.preventDefault()

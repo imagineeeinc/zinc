@@ -50,10 +50,10 @@
 
 		width: 30vw;
 		height: calc(100% - 30px);
-		padding: 20px 10px 10px 10px;
+		padding: env(titlebar-area-height, 20px) 10px 10px 10px;
 
 		position: fixed;
-		top: 0;
+		top:  0;
 		left: 0;
 	}
 	#contact-manage {

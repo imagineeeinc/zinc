@@ -42,7 +42,7 @@
 
 <style>
 	:root {
-		--toastContainerTop: 10px;
+		--toastContainerTop: calc(env(titlebar-area-height, 0px) + 20px);
     --toastContainerRight: 10px;
 	}
 	:global(.toast) {

@@ -9,8 +9,9 @@ import { toast } from '@zerodevx/svelte-toast'
 
 export var rdb = new Dexie("ZincDB")
 rdb.version(1).stores({
-  messages: '++id, senderUid, content, timestamp, sendOrRecive',
-	contacts: 'uid, name, firstTime, key, secret'
+  messages: 'id, senderUid, content, timestamp, sendOrRecive',
+	contacts: 'uid, name, firstTime, key, secret',
+	meshStore: '++id, storeFor, packet'
 })
 
 import { browser } from "$app/environment"
@@ -23,11 +24,15 @@ export let myName = writable("")
 let visible = writable(true)
 function createPeer() {
 	socket.emit("registerSelf", {id: getPubKey()})
+	socket.emit("requestMessageFor", {id: getPubKey()})
 	onNetwork = true
 	socket.on('channelFrom', async (data) => {
 		let packet = data.packet
 		if (packet.type == "ping" && packet.pingType == "online") {
 			// TODO: set online status
+		}  else if (data.dispersed == true) {
+			console.log(data.storeFor, packet)
+			addMessageToMesh(data.storeFor, packet)
 		} else if (packet.type == "auth" && packet.authType == "first-time") {
 			let base = BigInt(`0b${packet.base}`)
 			let prime = BigInt(`0b${packet.prime}`)
@@ -80,16 +85,42 @@ function createPeer() {
 			let name = await decryptForContact(packet.senderUid, packet.payload, packet.iv)
 			updateContact(packet.senderUid, {name})
 		} else if (packet.type == "chat") {
-			if (packet.chatType == "text") {
-				addMessageToDb(packet.senderUid, {payload: packet.payload, iv: packet.iv}, packet.time, false)
-				if (!document.hasFocus() || visible.get() == false) {
-					await notifyMessage(packet.senderUid, packet)
-				} else if (window.location.href.split("/").pop() != packet.senderUid) {
-					await toastMessage(packet.senderUid, packet)
-				}
-			}
+			// if (packet.chatType == "text") {
+			// 	addMessageToDb(packet.senderUid, {payload: packet.payload, iv: packet.iv}, packet.time, false)
+			// 	if (!document.hasFocus() || visible.get() == false) {
+			// 		await notifyMessage(packet.senderUid, packet)
+			// 	} else if (window.location.href.split("/").pop() != packet.senderUid) {
+			// 		await toastMessage(packet.senderUid, packet)
+			// 	}
+			// }
+			await parseChatPacket(packet, false)
 		}
 	})
+	socket.on('anyMessageFor', async (uid) => {
+		let res = await rdb.meshStore.where("storeFor").equals(uid).toArray()
+		if (res.length == 0) return
+		socket.emit("messageFromMeshFor", {id: uid, packets: res})
+		rdb.meshStore.where("storeFor").equals(uid).delete()
+		// TODO: Get the mesh to move messages around
+	})
+	socket.on('messageFromMesh', async (packets) => {
+		for (let packet of packets) {
+			await parseChatPacket(packet.packet, true)
+		}
+	})
+}
+
+async function parseChatPacket(packet, fromMesh) {
+	if (packet.chatType == "text") {
+		await addMessageToDb(packet.senderUid, {payload: packet.payload, iv: packet.iv}, packet.time, false)
+		if (!fromMesh) {
+			if (!document.hasFocus()/*  || visible.get() == false */) {
+				await notifyMessage(packet.senderUid, packet)
+			} else if (window.location.href.split("/").pop() != packet.senderUid) {
+				await toastMessage(packet.senderUid, packet)
+			}
+		}
+	}
 }
 var db = new dinoDb.database({id: "zinc"})
 
@@ -148,6 +179,7 @@ export function addContactToDb(contact) {
 }
 export function deleteContact(contact) {
 	rdb.contacts.delete(contact)
+	rdb.messages.where("senderUid").equals(contact).delete()
 }
 export function removeContactFromDb(contact) {
 	rdb.contacts.delete(contact)
@@ -169,33 +201,29 @@ export function getSelf() {
 	return db.getFromBook("self", "personal")
 }
 export async function getContacts() {
-	//return db.getFullBook("contacts")
 	let res = rdb.contacts.toArray()
 	return res
 }
 export async function getContact(id) {
-	//return db.getFromBook("contacts", id)
 	let res = await rdb.contacts.get(id)
 	return res
 }
 export async function contactSetSecret(uid, secret) {
-	//db.updateInBook("contacts", uid, {secret: secret.toString(2)})
 	rdb.contacts.update(uid, {secret: secret.toString(2)})
 }
 export async function contactSetKey(uid, key) {
-	//db.updateInBook("contacts", uid, {key: key.toString(2), firstTime: false})
 	rdb.contacts.update(uid, {key: key.toString(2), firstTime: false})
 }
 export async function contactGetKey(uid) {
-	//return db.getFromBook("contacts", uid).key
 	let res = await rdb.contacts.get(uid)
 	return res.key
 }
-function createMessageStore(uid) {
-	db.setInBook("messages", uid, {messages: []})
+export async function addMessageToDb(uid, content, timestamp, sendOrRecive) {
+	let hash = await genHashFromObj(content)
+	rdb.messages.add({id: hash, senderUid: uid, content, timestamp, sendOrRecive: sendOrRecive})
 }
-export function addMessageToDb(uid, content, timestamp, sendOrRecive) {
-	rdb.messages.add({senderUid: uid, content, timestamp, sendOrRecive: sendOrRecive})
+export function addMessageToMesh(uid, packet) {
+	rdb.meshStore.add({storeFor: uid, packet})
 }
 export async function getMessages(uid) {
 
@@ -250,6 +278,15 @@ export async function decryptForContact(uid, payload, iv) {
 		key_encoded,
 		payload
 	))
+}
+async function genHashFromObj(obj) {
+  const data = enc.encode(JSON.stringify(obj))
+  const hash = await window.crypto.subtle.digest("SHA-512", data)
+  const hashArray = Array.from(new Uint8Array(hash))
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join(""); 
+	return hashHex
 }
 
 async function notifyMessage(uid, content) {
