@@ -3,7 +3,7 @@
 	let { uid } = $props()
 	import { browser } from "$app/environment";
 	import { onMount } from "svelte";
-	import { socket, getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact, getMessages, addMessageToDb, rdb, toBase64, online } from "$lib/js/backend.js";
+	import { socket, getSelf, getPubKey, getContact, contactSetSecret, encryptForContact, decryptForContact, addMessageToDb, rdb, toBase64, online } from "$lib/js/backend.js";
 	import { generateLargePrime, generateRandBase} from "$lib/js/numberGen.js";
 	import { writable, get } from "svelte/store";
 	import { tick } from 'svelte';
@@ -13,6 +13,7 @@
 
 	var contact = writable({})
 	var files = writable([])
+	// Send Message
 	async function send(text, filesList) {
 		console.log(files)
 		let time = DateTime.now().toUnixInteger()
@@ -20,9 +21,9 @@
 			text,
 			files: JSON.parse(JSON.stringify(filesList))
 		}
-		console.log(data)
+		// Encrypt
 		let encrypted = await encryptForContact(get(contact).uid, JSON.stringify(data))
-		// conn.send({type: "chat", chatType: "text", time, payload: encrypted.payload, iv: encrypted.iv, senderUid: getPubKey()})
+		// Send
 		socket.emit("channelTo", {recipient: uid,
 			meshDisperse: true,
 			packet: {
@@ -33,17 +34,18 @@
 				senderUid: getPubKey()
 			}
 		})
+		// Reset Input
 		document.getElementById("chat-text").value = ""
-		//clear file input
 		files.set([])
 		document.getElementById("chat-text").focus()
-
+		// Add message to local db
 		await addMessageToDb(uid, {payload: encrypted.payload, iv: encrypted.iv}, time, true )
 	}
 	function sendButton(e) {
 		e.preventDefault()
 		send(document.getElementById("chat-text").value, get(files))
 	}
+	// Reactive Message Recive
 	let message = liveQuery (
 		() => rdb.messages
 		.where("senderUid")
@@ -52,6 +54,21 @@
 	)
 	let messagesDecrypted = writable([])
 	let yScroll = writable(0)
+
+	// Send Name
+	async function sendName() {
+		let nameData = await encryptForContact(uid, getSelf().name)
+		socket.emit("channelTo", {
+			recipient: uid,
+			packet: {
+				type: "auth",
+				authType: "name-exchange",
+				payload: nameData.payload,
+				iv: nameData.iv,
+				senderUid: getPubKey()
+			}
+		})
+	}
 	if (browser) {
 		onMount(async () => {
 			message.subscribe(async (value) => {
@@ -67,12 +84,14 @@
 					scrollToBottom(document.getElementById("message-box"))
 				})
 			})
+			// Get contact info from DB
 			contact.set(await getContact(uid))
 			document.getElementById("chat-text").addEventListener("keypress", (e)=>{
 				if (e.code == "Enter") {// e.keyCode == 13
 					send(document.getElementById("chat-text").value, get(files))
 				}
 			})
+			// Generate Keys using Diffe-Hellman
 			if ($contact.firstTime == true) {
 				let base = generateRandBase()
 				let prime = generateLargePrime(24)
@@ -90,22 +109,16 @@
 				})
 				contactSetSecret(uid, secret)
 				contact.set(await getContact(uid))
+				setTimeout(async () => {
+					await sendName()
+				}, 1000)
 			} else {
-				let nameData = await encryptForContact(uid, getSelf().name)
-				socket.emit("channelTo", {
-					recipient: uid,
-					packet: {
-						type: "auth",
-						authType: "name-exchange",
-						payload: nameData.payload,
-						iv: nameData.iv,
-						senderUid: getPubKey()
-					}
-				})
+				await sendName()
 			}
 			document.getElementById("chat-text").focus()
 		})
 	}
+	// |Extract files from file picker
 	async function putFiles(e) {
 		let data = []
 		for (let i = 0; i < e.target.files.length; i++) {
@@ -125,9 +138,10 @@
 				<div class="message {m.sendOrRecive? 'sent': 'recieved'}">
 					{payload.text}
 					{#if payload.files.length > 0}
+						<br>
 						{#each payload.files as file}
 								{#if file[2].search("image") > -1}
-									<img src={file[1]} class="receiving-file">
+									<img src={file[1]} class="receiving-file" alt={file[0]}>
 								{:else}
 									{#if file[2].search("video") > -1}
 										<video src={file[1]} class="receiving-file" controls="true"></video>

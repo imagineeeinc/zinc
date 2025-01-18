@@ -5,12 +5,14 @@
 	import { addContactToDb } from "$lib/js/backend.js";
   import { navigate } from "svelte-routing";
 	var qrScanner = null
+	// Add account
 	function resultHandler(result) {
 		addContactToDb(result.data)
 		qrScanner.destroy()
 		navigate("/")
 	}
 	onMount(async () => {
+		// Start QR code scanner
 		qrScanner = new QrScanner(
 			document.getElementById('preview'),
 			resultHandler,

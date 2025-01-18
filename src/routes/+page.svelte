@@ -15,6 +15,7 @@
   import { onMount } from 'svelte';
 
 	onMount(() => {
+		// Handle redirect from hash
 		if ($page.url.hash) {
 			let interval = setInterval(() => {
 				if (onNetwork) {

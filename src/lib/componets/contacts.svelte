@@ -1,19 +1,22 @@
 <script>
 	import { navigate } from "svelte-routing"
-	import { getContacts, deleteContact, rdb, online } from "$lib/js/backend.js"
+	import { deleteContact, rdb, online } from "$lib/js/backend.js"
 	import { liveQuery } from "dexie"
-	import { get } from "svelte/store"
 	let deleteMode = false
+	// Reactive Contact Recive
 	let contacts = liveQuery (
 		() => rdb.contacts
 		.toArray()
 	)
+	// Handle clicking a contact
 	function clickHandler(uid, firstTime) {
 		if (deleteMode) {
+			// Delete contact
 			if (confirm("Are you sure you want to delete this contact?")) {
 				deleteContact(uid)
 			}
 		} else {
+			// Open chat
 			if (firstTime && $online.indexOf(uid) == -1) {
 				alert("Contact offline, can't initiate a chat")
 			} else {

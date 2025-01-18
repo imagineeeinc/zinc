@@ -8,6 +8,7 @@
 	import { writable } from "svelte/store"
 	import { socket } from "$lib/js/backend.js"
 	setInterval(() => {
+		// Check if online and set status
 		if (!socket.connected) {
 			online.set(false)
 			type.set('error')

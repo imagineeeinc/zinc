@@ -1,8 +1,8 @@
 <script>
 	import RightBox from "./rightBox.svelte";
 	import { createAccount } from "$lib/js/backend.js";
-	import { browser } from "$app/environment";
   import { navigate } from "svelte-routing";
+	// Create Account
 	function createSelf() {
 		createAccount(document.getElementById("new-name").value,
 		document.getElementById("email").value)
@@ -17,8 +17,6 @@
 		<h3>Create a new Zinc P2P Account</h3>
 		<input type="text" placeholder="Name" id="new-name">
 		<input type="email" placeholder="Email" id="email" inputmode="email">
-		<!-- <input type="url" placeholder="Relay Server Host" id="new-relay">
-		<input type="number" placeholder="Relay Server Port" id="new-port"> -->
 		<button class="m-icon" on:click={createSelf}>login</button>
 	</div>
 </RightBox>

@@ -16,6 +16,7 @@
 	}
 	if (browser) {
 		onMount(() => {
+			// Add Contact
 			document.getElementById("add-contact").onsubmit = (e)=>{
 				e.preventDefault()
 				addContact(document.getElementById("p2p-uid").value)

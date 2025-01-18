@@ -1,6 +1,8 @@
 /// <reference types="@sveltejs/kit" />
 import { build, files, version } from '$service-worker';
 
+// PWA
+
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 
