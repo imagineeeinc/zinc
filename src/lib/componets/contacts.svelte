@@ -1,6 +1,6 @@
 <script>
 	import { navigate } from "svelte-routing"
-	import { getContacts, deleteContact, rdb } from "$lib/js/backend.js"
+	import { getContacts, deleteContact, rdb, online } from "$lib/js/backend.js"
 	import { liveQuery } from "dexie"
 	import { get } from "svelte/store"
 	let deleteMode = false
@@ -8,17 +8,20 @@
 		() => rdb.contacts
 		.toArray()
 	)
-	function clickHandler(uid) {
+	function clickHandler(uid, firstTime) {
 		if (deleteMode) {
 			if (confirm("Are you sure you want to delete this contact?")) {
 				deleteContact(uid)
 			}
 		} else {
-			navigate("/")
-			navigate(`/chat/${uid}`)
+			if (firstTime && $online.indexOf(uid) == -1) {
+				alert("Contact offline, can't initiate a chat")
+			} else {
+				navigate("/")
+				navigate(`/chat/${uid}`)
+			}
 		}
 	}
-	
 </script>
 
 <div id="contacts">
@@ -35,8 +38,9 @@
 	<div id="contact-list">
 		{#each $contacts as contact}
 			{@const uid = contact.uid}
-			<div class="clickable {deleteMode ? "delete" : ""}" on:click={() => clickHandler(uid)}>
+			<div class="clickable {deleteMode ? "delete" : ""} {contact.firstTime ? "new" : ""}" on:click={() => clickHandler(uid, contact.firstTime)}>
 				{ contact.name || uid }
+				<span class="online-indicator  {$online.indexOf(uid) > -1 ? "online" : ""}"></span>
 			</div>
 		{/each}
 	</div>
@@ -80,6 +84,20 @@
 	}
 	#contact-list > div:hover {
 		outline: 3px solid var(--tertiary);
+	}
+	.new {
+		outline: 3px solid orange !important;
+	}
+	.online-indicator {
+		display: inline-block;
+		width: 1ch;
+		height: 1ch;
+		background: var(--secondary);
+		border-radius: 50%;
+	}
+	.online-indicator.online {
+		background: springgreen;
+		outline: 3px solid var(--bg);
 	}
 	.delete {
 		color: crimson;

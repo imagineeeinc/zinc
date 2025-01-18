@@ -22,6 +22,17 @@ export function socketManger(io) {
 				socket.in(socketId).emit('messageFromMesh', data.packets)
 			}
 		})
+		socket.on('anyOnline', async (data) => {
+			let online = []
+			for(let i = 0; i < data.length; i++) {
+				let uid = data[i]
+				let res = await getSocketId(uid)
+				if (res) {
+					online.push(uid)
+				}
+			}
+			socket.emit('anyOnlineResponse', online)
+		})
 		socket.on('disconnect', () => {
 			removeLink(socket.id)
 		})

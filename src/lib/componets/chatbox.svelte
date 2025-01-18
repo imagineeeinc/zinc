@@ -5,7 +5,7 @@
 	import { onMount } from "svelte";
 	import { socket, getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact, getMessages, addMessageToDb, rdb } from "$lib/js/backend.js";
 	import { generateLargePrime, generateRandBase} from "$lib/js/numberGen.js";
-  import { writable, get } from "svelte/store";
+	import { writable, get } from "svelte/store";
 	import { tick } from 'svelte';
 	import { DateTime } from "luxon"
 	import { liveQuery } from "dexie"
@@ -113,6 +113,7 @@
 	</div>
 	<div id="chat-form">
 		<input type="text" id="chat-text" placeholder="Type a message" inputmode="text">
+		<button class="m-icon" id="attach">attach_file</button>
 		<button class="m-icon" id="chat-send" on:click={sendButton}>send</button>
 	</div>
 </RightBox>

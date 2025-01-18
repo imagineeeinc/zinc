@@ -9,7 +9,7 @@ import { toast } from '@zerodevx/svelte-toast'
 
 export var rdb = new Dexie("ZincDB")
 rdb.version(1).stores({
-  messages: 'id, senderUid, content, timestamp, sendOrRecive',
+  messages: '++id, senderUid, content, timestamp, sendOrRecive',
 	contacts: 'uid, name, firstTime, key, secret',
 	meshStore: '++id, storeFor, packet'
 })
@@ -21,6 +21,7 @@ import { writable } from 'svelte/store'
 export var socket = io()
 export var onNetwork = false
 export let myName = writable("")
+export let online = writable([])
 let visible = writable(true)
 function createPeer() {
 	socket.emit("registerSelf", {id: getPubKey()})
@@ -70,7 +71,7 @@ function createPeer() {
 			let contact = await getContact(packet.senderUid)
 			let key = (BigInt(`0b${packet.pub}`)** BigInt(`0b${contact.secret}`)) % BigInt(`0b${packet.prime}`)
 			await contactSetKey(packet.senderUid, key)
-			let nameData = await encryptForContact(uid, getSelf().name)
+			let nameData = await encryptForContact(packet.senderUid, getSelf().name)
 			socket.emit("channelTo", {
 				recipient: uid,
 				packet: {
@@ -85,14 +86,6 @@ function createPeer() {
 			let name = await decryptForContact(packet.senderUid, packet.payload, packet.iv)
 			updateContact(packet.senderUid, {name})
 		} else if (packet.type == "chat") {
-			// if (packet.chatType == "text") {
-			// 	addMessageToDb(packet.senderUid, {payload: packet.payload, iv: packet.iv}, packet.time, false)
-			// 	if (!document.hasFocus() || visible.get() == false) {
-			// 		await notifyMessage(packet.senderUid, packet)
-			// 	} else if (window.location.href.split("/").pop() != packet.senderUid) {
-			// 		await toastMessage(packet.senderUid, packet)
-			// 	}
-			// }
 			await parseChatPacket(packet, false)
 		}
 	})
@@ -172,7 +165,16 @@ if (browser) {
 			window.DEBUGnoWriteDb = false
 		}
 	}, 100)
+	setInterval(async () => {
+		let contacts = await rdb.contacts
+		.toArray()
+		let uids = contacts.map((contact) => contact.uid)
+		socket.emit("anyOnline", uids)
+	}, 1000)
 }
+socket.on('anyOnlineResponse', (data) => {
+	online.set(data)
+})
 
 export function addContactToDb(contact) {
 	rdb.contacts.add({uid: contact, name: contact, firstTime: true})
@@ -219,8 +221,11 @@ export async function contactGetKey(uid) {
 	return res.key
 }
 export async function addMessageToDb(uid, content, timestamp, sendOrRecive) {
-	let hash = await genHashFromObj(content)
-	rdb.messages.add({id: hash, senderUid: uid, content, timestamp, sendOrRecive: sendOrRecive})
+	let res = await rdb.messages.where({senderUid: uid, timestamp, sendOrRecive}).toArray()
+	if (res.length > 0) {
+		return
+	}
+	rdb.messages.add({senderUid: uid, content, timestamp, sendOrRecive})
 }
 export function addMessageToMesh(uid, packet) {
 	rdb.meshStore.add({storeFor: uid, packet})
@@ -279,15 +284,20 @@ export async function decryptForContact(uid, payload, iv) {
 		payload
 	))
 }
-async function genHashFromObj(obj) {
-  const data = enc.encode(JSON.stringify(obj))
-  const hash = await window.crypto.subtle.digest("SHA-512", data)
-  const hashArray = Array.from(new Uint8Array(hash))
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join(""); 
-	return hashHex
-}
+// async function genHashFromMessage(message) {
+// 	let data = `${message.senderUid}${message.timestamp}${message.sendOrRecive}`
+// 	let res = await genHashFromObj(data)
+// 	return res
+// }
+// async function genHashFromObj(obj) {
+//   const data = enc.encode(obj)
+//   const hash = await window.crypto.subtle.digest("SHA-512", data)
+//   const hashArray = Array.from(new Uint8Array(hash))
+//   const hashHex = hashArray
+//     .map((b) => b.toString(16).padStart(2, "0"))
+//     .join(""); 
+// 	return hashHex
+// }
 
 async function notifyMessage(uid, content) {
 	if (!("Notification" in window)) {
