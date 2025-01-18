@@ -40,7 +40,7 @@
 			{@const uid = contact.uid}
 			<div class="clickable {deleteMode ? "delete" : ""} {contact.firstTime ? "new" : ""}" on:click={() => clickHandler(uid, contact.firstTime)}>
 				{ contact.name || uid }
-				<span class="online-indicator  {$online.indexOf(uid) > -1 ? "online" : ""}"></span>
+				<span class="online-indicator {$online.indexOf(uid) > -1 ? "online" : ""}"></span>
 			</div>
 		{/each}
 	</div>

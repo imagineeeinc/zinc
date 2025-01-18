@@ -10,7 +10,9 @@ const port = 3000 || process.env.PORT
 const app = express()
 const server = createServer(app)
 
-const io = new Server(server)
+const io = new Server(server, {
+	maxHttpBufferSize: 1e9
+})
 socketManger(io)
 
 app.use(handler)

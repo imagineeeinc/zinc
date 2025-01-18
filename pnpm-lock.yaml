@@ -20,6 +20,9 @@ importers:
       express:
         specifier: ^4.21.1
         version: 4.21.1
+      file-type:
+        specifier: ^20.0.0
+        version: 20.0.0
       friendly-username-generator:
         specifier: ^2.0.4
         version: 2.0.4
@@ -420,6 +423,13 @@ packages:
       svelte: ^5.0.0-next.96 || ^5.0.0
       vite: ^5.0.0
 
+  '@tokenizer/inflate@0.2.6':
+    resolution: {integrity: sha512-SdR/i05U7Xhnsq36iyIq/ZiGGw4PKzw4ww3bOq80Pjj4wyXpqyTcgrgdDdGlcatnlvzNJx8CQw3hp6QZvkUwhA==}
+    engines: {node: '>=16'}
+
+  '@tokenizer/token@0.3.0':
+    resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
+
   '@types/cookie@0.4.1':
     resolution: {integrity: sha512-XW/Aa8APYr6jSVVA1y/DEIZX0/GMKLEVekNG727R8cs56ahETkRAy/3DR7+fJyh7oUgGwNQaRfXCun0+KbWY7Q==}
 
@@ -674,6 +684,13 @@ packages:
     resolution: {integrity: sha512-YSFlK1Ee0/GC8QaO91tHcDxJiE/X4FbpAyQWkxAvG6AXCuR65YzK8ua6D9hvi/TzUfZMpc+BwuM1IPw8fmQBiQ==}
     engines: {node: '>= 0.10.0'}
 
+  fflate@0.8.2:
+    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
+
+  file-type@20.0.0:
+    resolution: {integrity: sha512-w8Z+QqWtEPIfyoPx9lDhzR52UjY5PfZunJ6lmH48oCR2gVbV52Aaw2bVtbi7P4EAlSpjn8xmNDiRAieYaabEIQ==}
+    engines: {node: '>=18'}
+
   fill-range@7.1.1:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
     engines: {node: '>=8'}
@@ -755,6 +772,9 @@ packages:
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
     engines: {node: '>=0.10.0'}
+
+  ieee754@1.2.1:
+    resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
   import-meta-resolve@4.1.0:
     resolution: {integrity: sha512-I6fiaX09Xivtk+THaMfAwnA3MVA5Big1WHF1Dfx9hFuvNIWpXnorlkzhcQf6ehrqQiiZECRt1poOAkPmer3ruw==}
@@ -917,6 +937,10 @@ packages:
   path-to-regexp@0.1.10:
     resolution: {integrity: sha512-7lf7qcQidTku0Gu3YDPc8DJ1q7OOucfa/BSsIwjuh56VU7katFvuM8hULfkwB3Fns/rsVF7PwPKVw1sl5KQS9w==}
 
+  peek-readable@5.3.1:
+    resolution: {integrity: sha512-GVlENSDW6KHaXcd9zkZltB7tCLosKB/4Hg0fqBJkAoBgYG2Tn1xtMgXtSUuMU9AK/gCm/tTdT8mgAeF4YNeeqw==}
+    engines: {node: '>=14.16'}
+
   picocolors@1.0.1:
     resolution: {integrity: sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==}
 
@@ -1043,6 +1067,10 @@ packages:
     resolution: {integrity: sha512-laJTa3Jb+VQpaC6DseHhF7dXVqHTfJPCRDaEbid/drOhgitgYku/letMUqOXFoWV0zIIUbjpdH2t+tYj4bQMRQ==}
     engines: {node: '>=8'}
 
+  strtok3@10.0.1:
+    resolution: {integrity: sha512-7OOJepVlvlcgjW/fLNCsIqpNleAoi1y0LTRWGnOpABOSpRmw+65HvnruoOCnjpaQ1efnlYpQ/JwHKuaombnuXQ==}
+    engines: {node: '>=16'}
+
   supports-preserve-symlinks-flag@1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
@@ -1108,6 +1136,10 @@ packages:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
 
+  token-types@6.0.0:
+    resolution: {integrity: sha512-lbDrTLVsHhOMljPscd0yitpozq7Ga2M5Cvez5AjGg8GASBjtt6iERCAJ93yommPmz62fb45oFIXHEZ3u9bfJEA==}
+    engines: {node: '>=14.16'}
+
   totalist@3.0.1:
     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
     engines: {node: '>=6'}
@@ -1120,6 +1152,10 @@ packages:
     resolution: {integrity: sha512-Mtq29sKDAEYP7aljRgtPOpTvOfbwRWlS6dPRzwjdE+C0R4brX/GUyhHSecbHMFLNBLcJIPt9nl9yG5TZ1weH+Q==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  uint8array-extras@1.4.0:
+    resolution: {integrity: sha512-ZPtzy0hu4cZjv3z5NW9gfKnNLjoz4y6uv4HlelAjDK7sY/xOkKZv9xK/WQpcsBB3jEybChz9DPC2U/+cusjJVQ==}
+    engines: {node: '>=18'}
 
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
@@ -1451,6 +1487,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@tokenizer/inflate@0.2.6':
+    dependencies:
+      debug: 4.3.7
+      fflate: 0.8.2
+      token-types: 6.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@tokenizer/token@0.3.0': {}
+
   '@types/cookie@0.4.1': {}
 
   '@types/cookie@0.6.0': {}
@@ -1740,6 +1786,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  fflate@0.8.2: {}
+
+  file-type@20.0.0:
+    dependencies:
+      '@tokenizer/inflate': 0.2.6
+      strtok3: 10.0.1
+      token-types: 6.0.0
+      uint8array-extras: 1.4.0
+    transitivePeerDependencies:
+      - supports-color
+
   fill-range@7.1.1:
     dependencies:
       to-regex-range: 5.0.1
@@ -1831,6 +1888,8 @@ snapshots:
   iconv-lite@0.4.24:
     dependencies:
       safer-buffer: 2.1.2
+
+  ieee754@1.2.1: {}
 
   import-meta-resolve@4.1.0: {}
 
@@ -1948,6 +2007,8 @@ snapshots:
   path-parse@1.0.7: {}
 
   path-to-regexp@0.1.10: {}
+
+  peek-readable@5.3.1: {}
 
   picocolors@1.0.1: {}
 
@@ -2145,6 +2206,11 @@ snapshots:
     dependencies:
       min-indent: 1.0.1
 
+  strtok3@10.0.1:
+    dependencies:
+      '@tokenizer/token': 0.3.0
+      peek-readable: 5.3.1
+
   supports-preserve-symlinks-flag@1.0.0: {}
 
   svelte-check@3.8.5(postcss@8.4.40)(svelte@5.2.12):
@@ -2208,6 +2274,11 @@ snapshots:
 
   toidentifier@1.0.1: {}
 
+  token-types@6.0.0:
+    dependencies:
+      '@tokenizer/token': 0.3.0
+      ieee754: 1.2.1
+
   totalist@3.0.1: {}
 
   type-is@1.6.18:
@@ -2216,6 +2287,8 @@ snapshots:
       mime-types: 2.1.35
 
   typescript@5.5.4: {}
+
+  uint8array-extras@1.4.0: {}
 
   undici-types@6.19.8: {}
 

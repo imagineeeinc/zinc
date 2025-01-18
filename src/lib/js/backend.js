@@ -104,14 +104,12 @@ function createPeer() {
 }
 
 async function parseChatPacket(packet, fromMesh) {
-	if (packet.chatType == "text") {
-		await addMessageToDb(packet.senderUid, {payload: packet.payload, iv: packet.iv}, packet.time, false)
-		if (!fromMesh) {
-			if (!document.hasFocus()/*  || visible.get() == false */) {
-				await notifyMessage(packet.senderUid, packet)
-			} else if (window.location.href.split("/").pop() != packet.senderUid) {
-				await toastMessage(packet.senderUid, packet)
-			}
+	await addMessageToDb(packet.senderUid, {payload: packet.payload, iv: packet.iv}, packet.time, false)
+	if (!fromMesh) {
+		if (!document.hasFocus()/*  || visible.get() == false */) {
+			await notifyMessage(packet.senderUid, packet)
+		} else if (window.location.href.split("/").pop() != packet.senderUid) {
+			await toastMessage(packet.senderUid, packet)
 		}
 	}
 }
@@ -170,7 +168,7 @@ if (browser) {
 		.toArray()
 		let uids = contacts.map((contact) => contact.uid)
 		socket.emit("anyOnline", uids)
-	}, 1000)
+	}, 5000)
 }
 socket.on('anyOnlineResponse', (data) => {
 	online.set(data)
@@ -305,8 +303,21 @@ async function notifyMessage(uid, content) {
 	}
 	if (Notification.permission === "granted") {
 		let res = await decryptForContact(uid, content.payload, content.iv)
+		res = JSON.parse(res)
 		let contact = await getContact(uid)
-		let noti = new Notification(`From ${contact.name}`, {body: res, timestamp: content.timestamp})
+		let files = res.files
+		let fileName = files.map((f) => f[0])
+		let image = files[0][2].search("image") > -1 ? files[0][1] : ""
+		let body = res.text ? res.text : `Attached ${fileName.join(", ")}`
+		let noti = new Notification(`From ${contact.name}`, {
+			body,
+			timestamp: content.timestamp,
+			image,
+			data: {
+				url: "/chat/" + uid,
+				status: "open"
+			}
+		})
 		noti.onclick = () => {
 			navigate("/")
 			navigate("/chat/" + uid)
@@ -315,8 +326,19 @@ async function notifyMessage(uid, content) {
 }
 async function toastMessage(uid, content) {
 	let res = await decryptForContact(uid, content.payload, content.iv)
+	res = JSON.parse(res)
 	let contact = await getContact(uid)
-	toast.push(`<strong>${contact.name}</strong>: ${res}`, { classes: ['toast'],  pausable: true, duration: 20000 })
+	let files = res.files
+	let fileName = files.map((f) => f[0])
+	let body = res.text ? res.text : `Attached ${fileName.join(", ")}`
+	toast.push(`<strong>${contact.name}</strong>: ${body}`, { classes: ['toast'],  pausable: true, duration: 20000 })
 }
+
+export const toBase64 = file => new Promise((resolve, reject) => {
+	const reader = new FileReader()
+	reader.readAsDataURL(file)
+	reader.onload = () => resolve(reader.result)
+	reader.onerror = reject
+})
 
 export { db }

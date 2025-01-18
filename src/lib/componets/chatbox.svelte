@@ -3,24 +3,30 @@
 	let { uid } = $props()
 	import { browser } from "$app/environment";
 	import { onMount } from "svelte";
-	import { socket, getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact, getMessages, addMessageToDb, rdb } from "$lib/js/backend.js";
+	import { socket, getSelf, getPubKey, getContact, updateContact, contactSetSecret, contactSetKey, encryptForContact, decryptForContact, getMessages, addMessageToDb, rdb, toBase64, online } from "$lib/js/backend.js";
 	import { generateLargePrime, generateRandBase} from "$lib/js/numberGen.js";
 	import { writable, get } from "svelte/store";
 	import { tick } from 'svelte';
 	import { DateTime } from "luxon"
 	import { liveQuery } from "dexie"
-	import { scrollToBottom } from "$lib/js/scroll.js";
+	import { scrollToBottom } from "$lib/js/scroll.js"
 
 	var contact = writable({})
-	async function send(text) {
+	var files = writable([])
+	async function send(text, filesList) {
+		console.log(files)
 		let time = DateTime.now().toUnixInteger()
-		let encrypted = await encryptForContact(get(contact).uid, text)
+		let data = {
+			text,
+			files: JSON.parse(JSON.stringify(filesList))
+		}
+		console.log(data)
+		let encrypted = await encryptForContact(get(contact).uid, JSON.stringify(data))
 		// conn.send({type: "chat", chatType: "text", time, payload: encrypted.payload, iv: encrypted.iv, senderUid: getPubKey()})
 		socket.emit("channelTo", {recipient: uid,
 			meshDisperse: true,
 			packet: {
 				type: "chat",
-				chatType: "text",
 				time,
 				payload: encrypted.payload,
 				iv: encrypted.iv,
@@ -28,13 +34,15 @@
 			}
 		})
 		document.getElementById("chat-text").value = ""
+		//clear file input
+		files.set([])
 		document.getElementById("chat-text").focus()
 
 		await addMessageToDb(uid, {payload: encrypted.payload, iv: encrypted.iv}, time, true )
 	}
 	function sendButton(e) {
 		e.preventDefault()
-		send(document.getElementById("chat-text").value)
+		send(document.getElementById("chat-text").value, get(files))
 	}
 	let message = liveQuery (
 		() => rdb.messages
@@ -62,7 +70,7 @@
 			contact.set(await getContact(uid))
 			document.getElementById("chat-text").addEventListener("keypress", (e)=>{
 				if (e.code == "Enter") {// e.keyCode == 13
-					send(document.getElementById("chat-text").value)
+					send(document.getElementById("chat-text").value, get(files))
 				}
 			})
 			if ($contact.firstTime == true) {
@@ -98,14 +106,40 @@
 			document.getElementById("chat-text").focus()
 		})
 	}
+	async function putFiles(e) {
+		let data = []
+		for (let i = 0; i < e.target.files.length; i++) {
+			let res = await toBase64(e.target.files[i])
+			
+			data.push([e.target.files[i].name, res, e.target.files[i].type])
+		}
+		$files = data
+	}
 </script>
 
 <RightBox title={$contact.name}>
-	<div id="message-box" on:scroll={(e) => $yScroll = e.target.scrollTop}>
+	<div id="message-box" onscroll={(e) => $yScroll = e.target.scrollTop}>
 		<div id="message-content">
 			{#each $messagesDecrypted as m}
+			{@const payload = JSON.parse(m.payload)}
 				<div class="message {m.sendOrRecive? 'sent': 'recieved'}">
-					{m.payload}
+					{payload.text}
+					{#if payload.files.length > 0}
+						{#each payload.files as file}
+								{#if file[2].search("image") > -1}
+									<img src={file[1]} class="receiving-file">
+								{:else}
+									{#if file[2].search("video") > -1}
+										<video src={file[1]} class="receiving-file" controls="true"></video>
+									{:else}
+										<a class="file" href={file[1]} download={file[0]}>
+											{file[0]}
+										</a>
+									{/if}
+								{/if}
+							<br>
+						{/each}
+					{/if}
 					<span class="message-time">{DateTime.fromSeconds(m.timestamp).toFormat('dd/MM/yy t')}</span>
 				</div>
 			{/each}
@@ -113,8 +147,9 @@
 	</div>
 	<div id="chat-form">
 		<input type="text" id="chat-text" placeholder="Type a message" inputmode="text">
-		<button class="m-icon" id="attach">attach_file</button>
-		<button class="m-icon" id="chat-send" on:click={sendButton}>send</button>
+		<button class="m-icon {$files.length > 0 ? "files-selected" : ""}" id="chat-attach" onclick={()=>document.getElementById('attach').click()}>attach_file</button>
+		<button class="m-icon {$online.indexOf(uid) > -1 ? "online" : ""}" id="chat-send" onclick={sendButton}>send</button>
+		<input type="file" id="attach" multiple onchange={putFiles}>
 	</div>
 </RightBox>
 
@@ -174,5 +209,18 @@
 	.sent {
 		text-align: right;
 		align-self: flex-end;
+	}
+	#attach {
+		display: none;
+	}
+	.files-selected {
+		outline: 3px solid var(--tertiary);
+	}
+	.online {
+		outline: 3px solid springgreen;
+	}
+	.receiving-file {
+		max-width: 100%;
+		border-radius: 10px;
 	}
 </style>

@@ -9,7 +9,9 @@ const webSocketServer = {
 	configureServer(server) {
 		if (!server.httpServer) return
 
-		const io = new Server(server.httpServer)
+		const io = new Server(server.httpServer, {
+			maxHttpBufferSize: 1e9
+		})
 		socketManger(io)
 	}
 }
