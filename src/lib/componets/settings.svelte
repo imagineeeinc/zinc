@@ -43,7 +43,8 @@
 		<hr>
 		<section>
 			<h2>Data Stored</h2>
-			Nothing avalible yet.
+			<button>Clear all chat</button>
+			<button class="red">Reset Client</button>
 		</section>
 	</div>
 </RightBox>
@@ -66,5 +67,9 @@
 		flex-direction: column;
 		gap: 10px;
 		margin: 0 0 40px 0;
+	}
+	.red {
+		background: crimson;
+		color: white;
 	}
 </style>

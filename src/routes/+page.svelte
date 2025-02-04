@@ -6,6 +6,7 @@
 	import ScanQr from '$lib/componets/scanQr.svelte';
 	import StatusBar from '$lib/componets/statusBar.svelte';
 	import Settings from '$lib/componets/settings.svelte';
+	import Notification from '../lib/componets/notification.svelte';
 	import { onNetwork } from '$lib/js/backend.js';
 	import { page } from '$app/stores'
 
@@ -37,6 +38,7 @@
 	<Route path="p2p/scan" component={ScanQr} />
 	<Route path="create" component={Create} />
 	<Route path="settings" component={Settings}	/>
+	<Route path="unread" component={Notification} />
 </Router>
 
 <SvelteToast />	

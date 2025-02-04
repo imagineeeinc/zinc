@@ -23,6 +23,7 @@ export var socket = io()
 export var onNetwork = false
 export let myName = writable("")
 export let online = writable([])
+export let unread = writable([])
 let visible = writable(true)
 // Init network manager
 function createPeer() {
@@ -325,18 +326,22 @@ export async function decryptForContact(uid, payload, iv) {
 
 // Notify
 async function notifyMessage(uid, content) {
+	// Get Contact Info
+	let contact = await getContact(uid)
+	// Decrypt
+	let res = await decryptForContact(uid, content.payload, content.iv)
+	res = JSON.parse(res)
 	if (!("Notification" in window)) {
 		return
 	}
 	if (Notification.permission === "granted") {
-		// Decrypt
-		let res = await decryptForContact(uid, content.payload, content.iv)
-		res = JSON.parse(res)
-		let contact = await getContact(uid)
 		// Export file info
 		let files = res.files
 		let fileName = files.map((f) => f[0])
-		let image = files[0][2].search("image") > -1 ? files[0][1] : ""
+		let image = ""
+		if (files.length != 0) {
+			image = files[0][2].search("image") > -1 ? files[0][1] : ""
+		}
 		// Generate body text
 		let body = res.text ? res.text : `Attached ${fileName.join(", ")}`
 		// Notify
@@ -354,7 +359,10 @@ async function notifyMessage(uid, content) {
 			navigate("/")
 			navigate("/chat/" + uid)
 		}
+	} else {
+		toastMessage(uid, content)
 	}
+	unreadMessage(uid, content)
 }
 // Toast
 async function toastMessage(uid, content) {
@@ -369,6 +377,28 @@ async function toastMessage(uid, content) {
 	let body = res.text ? res.text : `Attached ${fileName.join(", ")}`
 	// Send toast
 	toast.push(`<strong>${contact.name}</strong>: ${body}`, { classes: ['toast'],  pausable: true, duration: 20000 })
+}
+async function unreadMessage(uid, content) {
+	// Get Contact Info
+	let contact = await getContact(uid)
+	// Decrypt
+	let res = await decryptForContact(uid, content.payload, content.iv)
+	res = JSON.parse(res)
+	if (!("Notification" in window)) {
+		return
+	}
+	unread.update(u => {
+		// Export file info
+		let files = res.files
+		let fileName = files.map((f) => f[0])
+		let image = ""
+		if (files.length != 0) {
+			image = files[0][2].search("image") > -1 ? files[0][1] : ""
+		}
+		// Generate body text
+		let body = res.text ? res.text : `Attached ${fileName.join(", ")}`
+		return [...u, {uid, name: contact.name, body, timestamp: content.time}]
+	})
 }
 
 // Convert file to base64

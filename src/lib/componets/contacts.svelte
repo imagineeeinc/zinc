@@ -35,7 +35,7 @@
 			<button class="m-icon" title="Search Everything">search</button>
 			<button class="m-icon {deleteMode ? "delete" : ""}" title="Delete Contact" on:click={() => deleteMode = !deleteMode}>delete</button>
 			<button class="m-icon" title="Settings" on:click={() => navigate("/settings")}>settings</button>
-			<button class="m-icon" title="Notifications">notifications</button>
+			<button class="m-icon" title="Notifications" on:click={() => navigate("/unread")}>notifications</button>
 		</span>
 	</div>
 	<div id="contact-list">

@@ -15,7 +15,6 @@
 	var files = writable([])
 	// Send Message
 	async function send(text, filesList) {
-		console.log(files)
 		let time = DateTime.now().toUnixInteger()
 		let data = {
 			text,
@@ -43,6 +42,8 @@
 	}
 	function sendButton(e) {
 		e.preventDefault()
+		// Reject if empty
+		if (document.getElementById("chat-text").value == "" && get(files).length == 0) return
 		send(document.getElementById("chat-text").value, get(files))
 	}
 	// Reactive Message Recive
@@ -88,6 +89,8 @@
 			contact.set(await getContact(uid))
 			document.getElementById("chat-text").addEventListener("keypress", (e)=>{
 				if (e.code == "Enter") {// e.keyCode == 13
+					// Reject if empty
+					if (document.getElementById("chat-text").value == "" && get(files).length == 0) return
 					send(document.getElementById("chat-text").value, get(files))
 				}
 			})
@@ -138,7 +141,9 @@
 				<div class="message {m.sendOrRecive? 'sent': 'recieved'}">
 					{payload.text}
 					{#if payload.files.length > 0}
-						<br>
+						{#if payload.text}
+							<br>
+						{/if}
 						{#each payload.files as file}
 								{#if file[2].search("image") > -1}
 									<img src={file[1]} class="receiving-file" alt={file[0]}>
